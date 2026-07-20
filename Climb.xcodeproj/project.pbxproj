@@ -61,7 +61,7 @@
 		D8254A0CCCD700966A4EC068 /* ClimbApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClimbApp.swift; sourceTree = "<group>"; };
 		E6915BD2ADFA9273191368AB /* LandingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandingView.swift; sourceTree = "<group>"; };
 		EC444458CE4FD78EE97C4EB9 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
-		F58DD979CD1DA9B37A8401D5 /* Climb.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Climb.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F58DD979CD1DA9B37A8401D5 /* Climb: Vote on Vibes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Climb: Vote on Vibes.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -239,7 +239,7 @@
 		DA32CF9FFD500C7E6943839C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				F58DD979CD1DA9B37A8401D5 /* Climb.app */,
+				F58DD979CD1DA9B37A8401D5 /* Climb: Vote on Vibes.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -272,7 +272,7 @@
 				93B483907F23529577D84308 /* Supabase */,
 			);
 			productName = Climb;
-			productReference = F58DD979CD1DA9B37A8401D5 /* Climb.app */;
+			productReference = F58DD979CD1DA9B37A8401D5 /* Climb: Vote on Vibes.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -425,6 +425,7 @@
 				);
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = climb.adamtampio.app;
+				PRODUCT_NAME = "Climb: Vote on Vibes";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -450,6 +451,7 @@
 				);
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = climb.adamtampio.app;
+				PRODUCT_NAME = "Climb: Vote on Vibes";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;

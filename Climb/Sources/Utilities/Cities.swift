@@ -1,7 +1,7 @@
 import Foundation
 
 /// City data matching the web app's CITIES array exactly
-struct City: Identifiable {
+struct City: Identifiable, Equatable {
     let id = UUID()
     let name: String
     let lat: Double
