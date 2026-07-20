@@ -14,8 +14,6 @@ targets:
   Climb:
     type: application
     platform: iOS
-    entitlements:
-      path: Climb/Climb.entitlements
     sources:
       - path: Climb/Sources
       - path: Climb/Resources

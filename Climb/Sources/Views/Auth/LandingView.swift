@@ -33,24 +33,6 @@ struct LandingView: View {
                 Spacer()
 
                 VStack(spacing: 12) {
-                    // Download on iOS button (static)
-                    HStack(spacing: 10) {
-                        Image(systemName: "apple.logo")
-                            .font(.system(size: 18))
-                        Text("Download on iOS")
-                            .font(ClimbTheme.bodyFont(size: 16))
-                            .fontWeight(.bold)
-                            .textCase(.uppercase)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(ClimbTheme.bgSecondary)
-                    .foregroundColor(ClimbTheme.textMain)
-                    .overlay(
-                        Rectangle()
-                            .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
-                    )
-
                     // Log In / Sign Up
                     Button("Log In / Sign Up") {
                         showAuth = true

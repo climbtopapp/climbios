@@ -1,5 +1,4 @@
 import SwiftUI
-import AuthenticationServices
 
 /// Authentication flow — sign up / log in with magic link
 /// Matches the web's screen-auth with 3 steps
@@ -98,22 +97,6 @@ struct AuthView: View {
                 )
             }
             .buttonStyle(.plain)
-
-            OrDivider()
-
-            SignInWithAppleButton(.continue) { request in
-                request.requestedScopes = [.email, .fullName]
-            } onCompletion: { result in
-                handleAppleSignInCompletion(result)
-            }
-            .signInWithAppleButtonStyle(.black)
-            .frame(height: 50)
-            .frame(maxWidth: 170)
-            .overlay(
-                Rectangle()
-                    .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
-            )
-            .shadow(color: .black, radius: 0, x: 3, y: 3)
 
             Button("Go Back") {
                 dismiss()
@@ -230,26 +213,4 @@ struct AuthView: View {
         isLoading = false
     }
 
-    private func handleAppleSignInCompletion(_ result: Result<ASAuthorization, Error>) {
-        switch result {
-        case .success(let authorization):
-            if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
-               let idTokenData = appleIDCredential.identityToken,
-               let idToken = String(data: idTokenData, encoding: .utf8) {
-                Task {
-                    isLoading = true
-                    do {
-                        try await appState.signInWithApple(idToken: idToken)
-                        appState.showToastMessage("Successfully authenticated!", type: .success)
-                        dismiss()
-                    } catch {
-                        appState.showToastMessage(error.localizedDescription, type: .error)
-                    }
-                    isLoading = false
-                }
-            }
-        case .failure(let error):
-            appState.showToastMessage(error.localizedDescription, type: .error)
-        }
-    }
 }
