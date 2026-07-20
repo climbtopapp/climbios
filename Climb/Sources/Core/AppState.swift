@@ -243,6 +243,15 @@ final class AppState: ObservableObject {
         )
     }
 
+    func signInWithApple(idToken: String) async throws {
+        try await supabase.auth.signInWithIdToken(
+            credentials: .init(
+                provider: .apple,
+                idToken: idToken
+            )
+        )
+    }
+
     func signOut() async {
         do {
             try await supabase.auth.signOut()
