@@ -1,0 +1,367 @@
+import SwiftUI
+
+/// Mash voting arena — the core voting screen
+/// Matches the web's screen-mash with two cards to vote between
+struct MashView: View {
+    @EnvironmentObject var appState: AppState
+
+    @State private var leftRotation = Double.random(in: -2...2)
+    @State private var rightRotation = Double.random(in: -2...2)
+    @State private var isVoting = false
+    @State private var votedSide: String? = nil
+    @State private var showBlockModal = false
+    @State private var blockTargetId: UUID?
+    @State private var leftImageLoaded = false
+    @State private var rightImageLoaded = false
+
+    private var hasMatchup: Bool {
+        appState.currentMatchup.count >= 2
+    }
+
+    @State private var showSafety = false
+    @State private var showNotifications = false
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            VStack(spacing: 0) {
+            // Header tabs: Global / Club
+            HStack {
+                Spacer()
+                HStack(spacing: 0) {
+                    Button(action: {
+                        appState.isMashClubMode = false
+                        Task { await appState.loadNextMatchup() }
+                        randomizeRotations()
+                    }) {
+                        Text("Global")
+                            .font(ClimbTheme.bodyFont(size: 14))
+                            .fontWeight(.bold)
+                            .textCase(.uppercase)
+                            .foregroundColor(!appState.isMashClubMode ? .black : ClimbTheme.textMuted)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(!appState.isMashClubMode ? ClimbTheme.primaryColor : Color.clear)
+                            .overlay(
+                                Group {
+                                    if !appState.isMashClubMode {
+                                        Rectangle().stroke(ClimbTheme.borderColor, lineWidth: 2)
+                                    }
+                                }
+                            )
+                    }
+                    .buttonStyle(.plain)
+
+                    Button(action: {
+                        let votes = appState.currentProfile?.votesCast ?? 0
+                        if votes < 25 {
+                            appState.showToastMessage("Cast \(25 - votes) more votes to unlock Clubs.", type: .error)
+                            return
+                        }
+                        if appState.currentClubInfo == nil {
+                            appState.showToastMessage("You must join a club first to climb against members.", type: .error)
+                            appState.selectedTab = .clubs
+                            return
+                        }
+                        appState.isMashClubMode = true
+                        Task { await appState.loadNextMatchup() }
+                        randomizeRotations()
+                    }) {
+                        Text("Club")
+                            .font(ClimbTheme.bodyFont(size: 14))
+                            .fontWeight(.bold)
+                            .textCase(.uppercase)
+                            .foregroundColor(appState.isMashClubMode ? .black : ClimbTheme.textMuted)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(appState.isMashClubMode ? ClimbTheme.primaryColor : Color.clear)
+                            .overlay(
+                                Group {
+                                    if appState.isMashClubMode {
+                                        Rectangle().stroke(ClimbTheme.borderColor, lineWidth: 2)
+                                    }
+                                }
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(4)
+                .background(ClimbTheme.bgSecondary)
+                .overlay(
+                    Rectangle()
+                        .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                )
+                Spacer()
+            }
+            .padding(.top, 16)
+
+            if hasMatchup {
+                // Voting arena
+                VStack(spacing: 12) {
+                    Spacer()
+
+                    // Left card
+                    mashCard(
+                        profile: appState.currentMatchup[0],
+                        rotation: leftRotation,
+                        side: "left",
+                        isHighlighted: votedSide == "left"
+                    )
+
+                    OrDivider()
+
+                    // Right card
+                    mashCard(
+                        profile: appState.currentMatchup[1],
+                        rotation: rightRotation,
+                        side: "right",
+                        isHighlighted: votedSide == "right"
+                    )
+
+                    Spacer()
+                }
+                .padding(.horizontal, 24)
+                .opacity(isVoting ? 0.3 : 1.0)
+                .animation(.easeOut(duration: 0.2), value: isVoting)
+            } else {
+                // No matchups view
+                VStack(spacing: 16) {
+                    Spacer()
+
+                    VStack(spacing: 16) {
+                        Image(systemName: "person.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 56, height: 56)
+                            .foregroundColor(ClimbTheme.accentColor)
+
+                        Text(appState.isMashClubMode ? "Not Enough Members" : "No Matchups Yet")
+                            .font(ClimbTheme.displayFont(size: 22))
+                            .fontWeight(.bold)
+                            .multilineTextAlignment(.center)
+
+                        Text(appState.isMashClubMode ?
+                             "There are not enough active members in this club with photos to vote on. Invite more club members to join!" :
+                             "To start voting, invite more friends to join Climb and upload their photos!")
+                            .font(ClimbTheme.bodyFont(size: 14))
+                            .foregroundColor(ClimbTheme.textMuted)
+                            .multilineTextAlignment(.center)
+                    }
+                    .brutalistCard(padding: 40)
+                    .frame(maxWidth: 400)
+
+                    Spacer()
+                }
+                .padding(20)
+            }
+            }
+
+            // Safety info button (?) in top-left
+            Button(action: { showSafety = true }) {
+                Text("?")
+                    .font(ClimbTheme.displayFont(size: 20))
+                    .fontWeight(.bold)
+                    .foregroundColor(ClimbTheme.textMain)
+                    .frame(width: 36, height: 36)
+                    .background(ClimbTheme.bgSecondary)
+                    .overlay(
+                        Rectangle()
+                            .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                    )
+            }
+            .padding(.top, 16)
+            .padding(.leading, 16)
+            .buttonStyle(.plain)
+
+            // Notifications button (🔔) in top-right
+            HStack {
+                Spacer()
+                Button(action: {
+                    UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: "climb_last_read_notifications")
+                    showNotifications = true
+                }) {
+                    ZStack(alignment: .topTrailing) {
+                        Text("🔔")
+                            .font(ClimbTheme.displayFont(size: 20))
+                            .fontWeight(.bold)
+                            .foregroundColor(ClimbTheme.textMain)
+                            .frame(width: 36, height: 36)
+                            .background(ClimbTheme.bgSecondary)
+                            .overlay(
+                                Rectangle()
+                                    .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                            )
+                        
+                        if unreadNotificationsCount > 0 {
+                            Circle()
+                                .fill(Color.red)
+                                .frame(width: 10, height: 10)
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.black, lineWidth: 1)
+                                )
+                                .offset(x: 4, y: -4)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.top, 16)
+            .padding(.trailing, 16)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(ClimbTheme.bgPrimary)
+        .sheet(isPresented: $showSafety) {
+            SafetyInfoView()
+        }
+        .sheet(isPresented: $showNotifications) {
+            NotificationsFeedView()
+                .environmentObject(appState)
+        }
+        .onAppear {
+            Task {
+                await appState.fetchNotifications()
+            }
+        }
+        .confirmationDialog("Block & Report", isPresented: $showBlockModal, titleVisibility: .visible) {
+            Button("Block & Report", role: .destructive) {
+                if let id = blockTargetId {
+                    Task {
+                        await appState.blockUser(blockedId: id)
+                        await appState.loadNextMatchup()
+                        randomizeRotations()
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                blockTargetId = nil
+            }
+        } message: {
+            Text("Are you sure you wish to block and report this user and their photo?")
+        }
+    }
+
+    // MARK: - Mash Card
+
+    @ViewBuilder
+    private func mashCard(profile: MatchupProfile, rotation: Double, side: String, isHighlighted: Bool) -> some View {
+        ZStack(alignment: .topLeading) {
+            VStack(spacing: 0) {
+                // Image wrapper
+                ZStack {
+                    AsyncImage(url: URL(string: profile.avatarUrl ?? "")) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        case .failure:
+                            VStack(spacing: 8) {
+                                Image(systemName: "photo")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 32, height: 32)
+                                    .foregroundColor(ClimbTheme.textMuted)
+                                Text("Image failed")
+                                    .font(ClimbTheme.bodyFont(size: 12))
+                                    .fontWeight(.bold)
+                                    .textCase(.uppercase)
+                                    .foregroundColor(ClimbTheme.textMuted)
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(ClimbTheme.bgPrimary)
+                        default:
+                            ProgressView()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .background(ClimbTheme.bgPrimary)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .aspectRatio(1, contentMode: .fit)
+                .clipped()
+                .overlay(alignment: .bottom) {
+                    Rectangle()
+                        .fill(ClimbTheme.borderColor)
+                        .frame(height: ClimbTheme.borderWidth)
+                }
+            }
+            .frame(maxWidth: 240)
+            .background(ClimbTheme.bgSecondary)
+            .overlay(
+                Rectangle()
+                    .stroke(isHighlighted ? ClimbTheme.successColor : ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+            )
+            .rotationEffect(.degrees(rotation))
+            .onTapGesture {
+                guard !isVoting else { return }
+                recordVote(side: side)
+            }
+
+            // Block button
+            Button(action: {
+                blockTargetId = profile.id
+                showBlockModal = true
+            }) {
+                Image(systemName: "nosign")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 16, height: 16)
+                    .foregroundColor(.white)
+                    .frame(width: 32, height: 32)
+                    .background(ClimbTheme.errorColor)
+                    .overlay(
+                        Rectangle()
+                            .stroke(ClimbTheme.borderColor, lineWidth: 2)
+                    )
+            }
+            .offset(x: -48, y: 50)
+            .rotationEffect(.degrees(-rotation)) // Counter-rotate
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Actions
+
+    private func recordVote(side: String) {
+        guard appState.currentMatchup.count >= 2 else { return }
+
+        isVoting = true
+        votedSide = side
+
+        let winnerId = side == "left" ? appState.currentMatchup[0].id : appState.currentMatchup[1].id
+        let loserId = side == "left" ? appState.currentMatchup[1].id : appState.currentMatchup[0].id
+
+        Task {
+            await appState.castVote(winnerId: winnerId, loserId: loserId)
+            appState.showToastMessage("Vote registered!", type: .success)
+
+            try? await Task.sleep(for: .milliseconds(200))
+
+            await appState.loadNextMatchup()
+            randomizeRotations()
+            votedSide = nil
+            isVoting = false
+        }
+    }
+
+    private func randomizeRotations() {
+        leftRotation = Double.random(in: -2...2)
+        rightRotation = Double.random(in: -2...2)
+    }
+
+    private var unreadNotificationsCount: Int {
+        let lastRead = UserDefaults.standard.double(forKey: "climb_last_read_notifications")
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        return appState.notifications.filter { item in
+            var date = formatter.date(from: item.createdAt)
+            if date == nil {
+                let fallback = ISO8601DateFormatter()
+                date = fallback.date(from: item.createdAt)
+            }
+            guard let date = date else { return false }
+            return date.timeIntervalSince1970 > lastRead
+        }.count
+    }
+}
