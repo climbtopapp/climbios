@@ -135,6 +135,43 @@ final class AppState: ObservableObject {
     @Published var isLoading = true
     @Published var isAuthenticated = false
 
+    var isDemoUser: Bool {
+        currentUser?.id == UUID(uuidString: "00000000-0000-0000-0000-000000000000")
+    }
+
+    func loginAsDemoUser(email: String) {
+        let demoUUID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+        
+        let demoUser = User(
+            id: demoUUID,
+            appMetadata: [:],
+            userMetadata: [:],
+            aud: "authenticated",
+            email: email,
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+        
+        let demoProfile = Profile(
+            id: demoUUID,
+            email: email,
+            firstName: "Apple Reviewer",
+            gender: "everyone",
+            votePreference: "everyone",
+            avatarUrl: "https://example.com/demo-avatar.jpg",
+            latitude: 37.7749,
+            longitude: -122.4194,
+            state: "CA",
+            elo: 1500.0,
+            votesCast: 9999,
+            createdAt: "2026-07-20T00:00:00Z"
+        )
+        
+        self.currentUser = demoUser
+        self.currentProfile = demoProfile
+        self.isAuthenticated = true
+    }
+
     // Navigation
     @Published var selectedTab: AppTab = .mash
     @Published var showSettings = false
@@ -271,6 +308,12 @@ final class AppState: ObservableObject {
 
     func fetchUserProfile() async {
         guard let userId = currentUser?.id else { return }
+        if isDemoUser {
+            await MainActor.run {
+                self.isLoading = false
+            }
+            return
+        }
 
         do {
             let profile: Profile = try await supabase
@@ -302,6 +345,7 @@ final class AppState: ObservableObject {
     }
 
     var isProfileComplete: Bool {
+        if isDemoUser { return true }
         guard let p = currentProfile else { return false }
         return p.avatarUrl != nil && p.firstName != nil && p.gender != nil
             && !p.avatarUrl!.isEmpty && !p.firstName!.isEmpty && !p.gender!.isEmpty
@@ -309,6 +353,7 @@ final class AppState: ObservableObject {
 
     func fetchNotifications() async {
         guard let userId = currentUser?.id else { return }
+        if isDemoUser { return }
         do {
             let fetched: [NotificationItem] = try await supabase
                 .from("notifications")
@@ -328,6 +373,7 @@ final class AppState: ObservableObject {
 
     func markAllNotificationsAsRead() async {
         guard let userId = currentUser?.id else { return }
+        if isDemoUser { return }
         let unreadIds = notifications.filter { !$0.isRead }.map { $0.id.uuidString }
         if unreadIds.isEmpty { return }
         
@@ -352,6 +398,18 @@ final class AppState: ObservableObject {
 
     func updateProfile(firstName: String, votePref: String, state: String, lat: Double, lng: Double) async throws {
         guard let userId = currentUser?.id else { return }
+        if isDemoUser {
+            currentProfile?.firstName = firstName
+            currentProfile?.votePreference = votePref
+            currentProfile?.state = state
+            currentProfile?.latitude = lat
+            currentProfile?.longitude = lng
+            userState = state
+            userVotePreference = votePref
+            userLatitude = lat
+            userLongitude = lng
+            return
+        }
 
         try await supabase
             .from("profiles")
@@ -378,6 +436,11 @@ final class AppState: ObservableObject {
 
     func uploadAvatar(imageData: Data) async throws -> String {
         guard let userId = currentUser?.id else { throw NSError(domain: "", code: 0) }
+        if isDemoUser {
+            let urlString = "https://example.com/demo-avatar.jpg"
+            currentProfile?.avatarUrl = urlString
+            return urlString
+        }
 
         let fileName = "\(Int(Date().timeIntervalSince1970 * 1000)).jpg"
         let filePath = "\(userId.uuidString)/\(fileName)"
@@ -404,6 +467,13 @@ final class AppState: ObservableObject {
 
     func completeRegistration(firstName: String, gender: String, votePref: String, state: String, lat: Double, lng: Double, imageData: Data) async throws {
         guard let userId = currentUser?.id else { throw NSError(domain: "", code: 0) }
+        if isDemoUser {
+            userState = state
+            userVotePreference = votePref
+            userLatitude = lat
+            userLongitude = lng
+            return
+        }
 
         // 1. Upload avatar
         let fileName = "\(Int(Date().timeIntervalSince1970 * 1000)).jpg"
@@ -475,6 +545,15 @@ final class AppState: ObservableObject {
     }
 
     func castVote(winnerId: UUID, loserId: UUID) async {
+        if isDemoUser {
+            if var profile = currentProfile {
+                profile.votesCast += 1
+                currentProfile = profile
+            }
+            let generator = UIImpactFeedbackGenerator(style: .light)
+            generator.impactOccurred()
+            return
+        }
         do {
             try await supabase.rpc("cast_vote", params: [
                 "winner_id": winnerId.uuidString,
@@ -497,7 +576,11 @@ final class AppState: ObservableObject {
     }
 
     func blockUser(blockedId: UUID) async {
-        guard let userId = currentUser?.id else { return }
+            guard let userId = currentUser?.id else { return }
+            if isDemoUser {
+                showToastMessage("User blocked.", type: .success)
+                return
+            }
 
         do {
             try await supabase
@@ -518,6 +601,15 @@ final class AppState: ObservableObject {
 
     func loadLeaderboard() async -> [LeaderboardRow] {
         guard currentUser != nil else { return [] }
+        if isDemoUser {
+            return [
+                LeaderboardRow(userId: UUID(), firstName: "Apple Reviewer", avatarUrl: nil, state: "CA", relativeRank: 1),
+                LeaderboardRow(userId: UUID(), firstName: "Sarah", avatarUrl: nil, state: "NY", relativeRank: 2),
+                LeaderboardRow(userId: UUID(), firstName: "Alex", avatarUrl: nil, state: "MI", relativeRank: 3),
+                LeaderboardRow(userId: UUID(), firstName: "David", avatarUrl: nil, state: "TX", relativeRank: 4),
+                LeaderboardRow(userId: UUID(), firstName: "Jessica", avatarUrl: nil, state: "FL", relativeRank: 5)
+            ]
+        }
 
         do {
             if currentLeaderboardTab == .club {
@@ -553,6 +645,9 @@ final class AppState: ObservableObject {
 
     func loadUserRanks() async -> UserRankStats? {
         guard let userId = currentUser?.id else { return nil }
+        if isDemoUser {
+            return UserRankStats(globalRank: 1, totalGlobal: 100, stateRank: 1, totalState: 10)
+        }
 
         do {
             let data: [UserRankStats] = try await supabase
@@ -574,6 +669,21 @@ final class AppState: ObservableObject {
     // MARK: - Clubs
 
     func fetchClubInfo() async {
+        if isDemoUser {
+            currentClubInfo = ClubInfo(
+                id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
+                name: "Reviewer Club",
+                code: "REVIEW",
+                createdBy: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!,
+                memberCount: 3
+            )
+            currentClubMembers = [
+                ClubMember(userId: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!, firstName: "Apple Reviewer", avatarUrl: nil, state: "CA"),
+                ClubMember(userId: UUID(), firstName: "Sarah", avatarUrl: nil, state: "NY"),
+                ClubMember(userId: UUID(), firstName: "Alex", avatarUrl: nil, state: "MI")
+            ]
+            return
+        }
         do {
             let data: ClubResponse = try await supabase
                 .rpc("get_my_club")
@@ -588,16 +698,49 @@ final class AppState: ObservableObject {
     }
 
     func createClub(name: String) async throws {
+        if isDemoUser {
+            currentClubInfo = ClubInfo(
+                id: UUID(),
+                name: name,
+                code: "NEWCLB",
+                createdBy: currentUser!.id,
+                memberCount: 1
+            )
+            currentClubMembers = [
+                ClubMember(userId: currentUser!.id, firstName: "Apple Reviewer", avatarUrl: nil, state: "CA")
+            ]
+            return
+        }
         try await supabase.rpc("create_club", params: ["club_name": name]).execute()
         await fetchClubInfo()
     }
 
     func joinClub(code: String) async throws {
+        if isDemoUser {
+            currentClubInfo = ClubInfo(
+                id: UUID(),
+                name: "Joined Demo Club",
+                code: code.uppercased(),
+                createdBy: UUID(),
+                memberCount: 2
+            )
+            currentClubMembers = [
+                ClubMember(userId: currentUser!.id, firstName: "Apple Reviewer", avatarUrl: nil, state: "CA"),
+                ClubMember(userId: UUID(), firstName: "John", avatarUrl: nil, state: "CA")
+            ]
+            return
+        }
         try await supabase.rpc("join_club", params: ["invite_code": code]).execute()
         await fetchClubInfo()
     }
 
     func leaveClub() async throws {
+        if isDemoUser {
+            currentClubInfo = nil
+            currentClubMembers = []
+            isMashClubMode = false
+            return
+        }
         try await supabase.rpc("leave_club").execute()
         currentClubInfo = nil
         currentClubMembers = []
@@ -605,6 +748,16 @@ final class AppState: ObservableObject {
     }
 
     func updateClubName(_ newName: String) async throws {
+        if isDemoUser {
+            currentClubInfo = ClubInfo(
+                id: currentClubInfo!.id,
+                name: newName,
+                code: currentClubInfo!.code,
+                createdBy: currentClubInfo!.createdBy,
+                memberCount: currentClubInfo?.memberCount
+            )
+            return
+        }
         try await supabase.rpc("update_club_name", params: ["new_name": newName]).execute()
         currentClubInfo = ClubInfo(
             id: currentClubInfo!.id,
@@ -616,6 +769,10 @@ final class AppState: ObservableObject {
     }
 
     func removeClubMember(userId: UUID) async throws {
+        if isDemoUser {
+            currentClubMembers.removeAll { $0.userId == userId }
+            return
+        }
         try await supabase.rpc("remove_club_member", params: ["target_user_id": userId.uuidString]).execute()
         await fetchClubInfo()
     }

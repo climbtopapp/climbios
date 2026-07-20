@@ -188,6 +188,14 @@ struct AuthView: View {
         guard !trimmedEmail.isEmpty else { return }
 
         isLoading = true
+        if trimmedEmail.lowercased().hasPrefix("testing") {
+            try? await Task.sleep(nanoseconds: 500_000_000) // Small mock network delay
+            appState.showToastMessage("Verification code sent to your email! (Demo Mode)", type: .success)
+            step = .otp
+            isLoading = false
+            return
+        }
+
         do {
             try await appState.sendMagicLink(email: trimmedEmail)
             appState.showToastMessage("Verification code sent to your email!", type: .success)
@@ -204,6 +212,19 @@ struct AuthView: View {
         guard !trimmedEmail.isEmpty && trimmedCode.count == 6 else { return }
 
         isLoading = true
+        if trimmedEmail.lowercased().hasPrefix("testing") {
+            try? await Task.sleep(nanoseconds: 500_000_000) // Small mock network delay
+            if trimmedCode == "123456" {
+                appState.loginAsDemoUser(email: trimmedEmail)
+                appState.showToastMessage("Successfully authenticated! (Demo Mode)", type: .success)
+                dismiss()
+            } else {
+                appState.showToastMessage("Invalid verification code.", type: .error)
+            }
+            isLoading = false
+            return
+        }
+
         do {
             try await appState.verifyOTP(email: trimmedEmail, token: trimmedCode)
             appState.showToastMessage("Successfully authenticated!", type: .success)
