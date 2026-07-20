@@ -12,6 +12,7 @@
 		24BB2AE4FCA3BCAE2C5015EB /* CityPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CC57BB4689DB109B90416F /* CityPickerView.swift */; };
 		3FABE01C11377D0040E06BE0 /* SupabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 025D48A708EE064F58306D2B /* SupabaseManager.swift */; };
 		445FCAC873E82F464CB91A48 /* ChallengesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F3A107C4989C7EC73946F4 /* ChallengesView.swift */; };
+		45E396EB83455A4AA9E20326 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FCDD58EA8F811CBF4C58E282 /* Assets.xcassets */; };
 		49E43B804B94EEFBA5BC92F3 /* EloGrade.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD0C0FDCD546578B76703841 /* EloGrade.swift */; };
 		4A45710EC804DADE75098A79 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC444458CE4FD78EE97C4EB9 /* AppState.swift */; };
 		4AC97046BC0C2E81DB8106D8 /* ClimbApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8254A0CCCD700966A4EC068 /* ClimbApp.swift */; };
@@ -61,7 +62,8 @@
 		D8254A0CCCD700966A4EC068 /* ClimbApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClimbApp.swift; sourceTree = "<group>"; };
 		E6915BD2ADFA9273191368AB /* LandingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandingView.swift; sourceTree = "<group>"; };
 		EC444458CE4FD78EE97C4EB9 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
-		F58DD979CD1DA9B37A8401D5 /* Climb: Vote on Vibes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Climb: Vote on Vibes.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F58DD979CD1DA9B37A8401D5 /* Climb.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Climb.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FCDD58EA8F811CBF4C58E282 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -188,6 +190,7 @@
 		C1A924B95E92F020660D7529 /* Climb */ = {
 			isa = PBXGroup;
 			children = (
+				FCDD58EA8F811CBF4C58E282 /* Assets.xcassets */,
 				2636858ECF2C1D83D109E199 /* Resources */,
 				5A11F4EDD84D8AFE2ED8D9B1 /* Sources */,
 			);
@@ -239,7 +242,7 @@
 		DA32CF9FFD500C7E6943839C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				F58DD979CD1DA9B37A8401D5 /* Climb: Vote on Vibes.app */,
+				F58DD979CD1DA9B37A8401D5 /* Climb.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -272,7 +275,7 @@
 				93B483907F23529577D84308 /* Supabase */,
 			);
 			productName = Climb;
-			productReference = F58DD979CD1DA9B37A8401D5 /* Climb: Vote on Vibes.app */;
+			productReference = F58DD979CD1DA9B37A8401D5 /* Climb.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -283,6 +286,12 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					09CA0086D18653A88B72081D = {
+						DevelopmentTeam = XHNAVCGKFP;
+						ProvisioningStyle = Automatic;
+					};
+				};
 			};
 			buildConfigurationList = 7DDD01637DC3B358791EC113 /* Build configuration list for PBXProject "Climb" */;
 			developmentRegion = en;
@@ -311,6 +320,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				45E396EB83455A4AA9E20326 /* Assets.xcassets in Resources */,
 				B3453957424B0FEDB762A37F /* Sen-Bold.ttf in Resources */,
 				FF1D68FF5954CF9627B1E119 /* Sen-Regular.ttf in Resources */,
 				C886FB5D1DDFF62CECD75E77 /* VT323-Regular.ttf in Resources */,
@@ -412,7 +422,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -426,7 +435,6 @@
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = climb.adamtampio.app;
 				PRODUCT_NAME = "Climb: Vote on Vibes";
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.9;
@@ -438,7 +446,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -452,7 +459,6 @@
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = climb.adamtampio.app;
 				PRODUCT_NAME = "Climb: Vote on Vibes";
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.9;
