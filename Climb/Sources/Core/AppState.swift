@@ -538,6 +538,13 @@ final class AppState: ObservableObject {
                     .value
                 currentMatchup = data
             }
+
+            // Prefetch photos for instant rendering
+            for profile in currentMatchup {
+                if let avatarUrl = profile.avatarUrl {
+                    ImageCacheManager.shared.prefetch(urlString: avatarUrl)
+                }
+            }
         } catch {
             print("Failed to load matchup: \(error)")
             showToastMessage("Failed to load matchup.", type: .error)

@@ -122,12 +122,24 @@ struct ProfileView: View {
     @ViewBuilder
     private func statBox(value: String, label: String, isLocked: Bool = false) -> some View {
         VStack(spacing: 2) {
-            Text(value)
-                .font(ClimbTheme.displayFont(size: isLocked ? 22 : 28))
-                .foregroundColor(isLocked ? ClimbTheme.accentColor : ClimbTheme.primaryColor)
-                .shadow(color: .black, radius: 0, x: 1, y: 1)
-                .minimumScaleFactor(0.5)
-                .lineLimit(1)
+            if isLocked {
+                HStack(spacing: 6) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(ClimbTheme.accentColor)
+                    Text("$0.99")
+                        .font(ClimbTheme.displayFont(size: 22))
+                        .foregroundColor(ClimbTheme.accentColor)
+                        .shadow(color: .black, radius: 0, x: 1, y: 1)
+                }
+            } else {
+                Text(value)
+                    .font(ClimbTheme.displayFont(size: 28))
+                    .foregroundColor(ClimbTheme.primaryColor)
+                    .shadow(color: .black, radius: 0, x: 1, y: 1)
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(1)
+            }
 
             Text(label)
                 .font(ClimbTheme.bodyFont(size: 12))
@@ -270,6 +282,19 @@ struct PersonalGradePurchaseSheet: View {
     var body: some View {
         VStack(spacing: 20) {
             Spacer().frame(height: 10)
+
+            // Header Icon Box
+            Image(systemName: "lock.fill")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
+                .foregroundColor(ClimbTheme.accentColor)
+                .frame(width: 50, height: 50)
+                .background(ClimbTheme.bgSecondary)
+                .overlay(
+                    Rectangle()
+                        .stroke(ClimbTheme.borderColor, lineWidth: 2)
+                )
 
             // Header
             VStack(spacing: 8) {

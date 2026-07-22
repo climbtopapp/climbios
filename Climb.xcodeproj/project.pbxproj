@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		151F44C9DD7FD55E8FB5DF4C /* LandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6915BD2ADFA9273191368AB /* LandingView.swift */; };
+		16D01C9B10015435EC90D70C /* ImageCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B6123BD63D72B76B795AED0 /* ImageCacheManager.swift */; };
 		1E9E6E5AEDDE94A18E7E269F /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65024901C59C2F68BBEAF969 /* MainTabView.swift */; };
 		24BB2AE4FCA3BCAE2C5015EB /* CityPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CC57BB4689DB109B90416F /* CityPickerView.swift */; };
 		3FABE01C11377D0040E06BE0 /* SupabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 025D48A708EE064F58306D2B /* SupabaseManager.swift */; };
@@ -41,6 +42,7 @@
 		025D48A708EE064F58306D2B /* SupabaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseManager.swift; sourceTree = "<group>"; };
 		05A9A20FEA8412B28DC704B0 /* BrutalistComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrutalistComponents.swift; sourceTree = "<group>"; };
 		1913C5D8FE912D213B26261B /* RetroIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetroIcon.swift; sourceTree = "<group>"; };
+		1B6123BD63D72B76B795AED0 /* ImageCacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheManager.swift; sourceTree = "<group>"; };
 		27F5AB1FD9D15F5E365C40D5 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		2876BCE47A48B9CF49889216 /* ClubsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubsView.swift; sourceTree = "<group>"; };
 		33A0B8A4D88651FB04F3209D /* SafetyInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyInfoView.swift; sourceTree = "<group>"; };
@@ -176,6 +178,7 @@
 			children = (
 				D6C3A9FCEBCFD0BA0DA137BC /* Cities.swift */,
 				AD0C0FDCD546578B76703841 /* EloGrade.swift */,
+				1B6123BD63D72B76B795AED0 /* ImageCacheManager.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -346,6 +349,7 @@
 				4AC97046BC0C2E81DB8106D8 /* ClimbApp.swift in Sources */,
 				62E9E3F92A968F800622C986 /* ClubsView.swift in Sources */,
 				49E43B804B94EEFBA5BC92F3 /* EloGrade.swift in Sources */,
+				16D01C9B10015435EC90D70C /* ImageCacheManager.swift in Sources */,
 				DB88B6F74A6DA2CA8CF93013 /* ImageCropperView.swift in Sources */,
 				151F44C9DD7FD55E8FB5DF4C /* LandingView.swift in Sources */,
 				4E3FDDFA4345CF33FF2B32CE /* LeaderboardView.swift in Sources */,

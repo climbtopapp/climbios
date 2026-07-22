@@ -86,7 +86,18 @@ struct SafetyInfoView: View {
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }
+                    // Contact Support button
+                    Button(action: openSupportEmail) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "envelope.fill")
+                                .font(.system(size: 14))
+                            Text("Contact Support")
+                                .font(ClimbTheme.bodyFont(size: 14))
+                                .fontWeight(.bold)
+                        }
                     }
+                    .buttonStyle(BrutalistSecondaryButtonStyle(isFullWidth: true))
+                    .padding(.top, 12)
                 }
                 .padding(20)
             }
@@ -102,6 +113,13 @@ struct SafetyInfoView: View {
                     }
                 }
             }
+            }
+        }
+    }
+
+    private func openSupportEmail() {
+        if let url = URL(string: "mailto:anything@vexaiulkoo.resend.app?subject=Climb%20App%20Support") {
+            UIApplication.shared.open(url)
         }
     }
 }

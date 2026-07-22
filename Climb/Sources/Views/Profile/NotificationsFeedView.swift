@@ -62,25 +62,39 @@ struct NotificationsFeedView: View {
     }
 
     private func notificationRow(_ item: NotificationItem) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .top) {
-                Text(item.title)
-                    .font(ClimbTheme.displayFont(size: 16))
-                    .fontWeight(.bold)
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: notificationIcon(for: item.title))
+                .resizable()
+                .scaledToFit()
+                .frame(width: 18, height: 18)
+                .foregroundColor(ClimbTheme.primaryColor)
+                .frame(width: 36, height: 36)
+                .background(ClimbTheme.bgPrimary)
+                .overlay(
+                    Rectangle()
+                        .stroke(ClimbTheme.borderColor, lineWidth: 2)
+                )
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .top) {
+                    Text(item.title)
+                        .font(ClimbTheme.displayFont(size: 15))
+                        .fontWeight(.bold)
+                        .foregroundColor(ClimbTheme.textMain)
+
+                    Spacer()
+
+                    Text(formatDate(item.createdAt))
+                        .font(ClimbTheme.bodyFont(size: 11))
+                        .foregroundColor(ClimbTheme.textMuted)
+                }
+
+                Text(item.message)
+                    .font(ClimbTheme.bodyFont(size: 13))
                     .foregroundColor(ClimbTheme.textMain)
-
-                Spacer()
-
-                Text(formatDate(item.createdAt))
-                    .font(ClimbTheme.bodyFont(size: 11))
-                    .foregroundColor(ClimbTheme.textMuted)
+                    .lineLimit(4)
+                    .multilineTextAlignment(.leading)
             }
-
-            Text(item.message)
-                .font(ClimbTheme.bodyFont(size: 13))
-                .foregroundColor(ClimbTheme.textMain)
-                .lineLimit(4)
-                .multilineTextAlignment(.leading)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -89,6 +103,14 @@ struct NotificationsFeedView: View {
             Rectangle()
                 .stroke(ClimbTheme.borderColor, lineWidth: 2)
         )
+    }
+
+    private func notificationIcon(for title: String) -> String {
+        let lower = title.lowercased()
+        if lower.contains("club") { return "person.3.fill" }
+        if lower.contains("rank") || lower.contains("top") { return "trophy.fill" }
+        if lower.contains("welcome") || lower.contains("match") { return "sparkles" }
+        return "bell.fill"
     }
 
     private func formatDate(_ isoString: String) -> String {
