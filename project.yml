@@ -38,3 +38,12 @@ targets:
     dependencies:
       - package: Supabase
         product: Supabase
+schemes:
+  Climb:
+    build:
+      targets:
+        Climb: all
+    run:
+      config: Debug
+      storekitConfiguration: Climb/Climb.storekit
+

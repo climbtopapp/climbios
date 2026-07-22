@@ -1,0 +1,32 @@
+{
+  "identifier" : "ClimbStoreKit",
+  "nonRenewingSubscriptions" : [ ],
+  "products" : [
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6792864994",
+      "localizations" : [
+        {
+          "description" : "Unlock your Personal Grade and lifetime rating statistics.",
+          "displayName" : "Personal Grade",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "grade",
+      "referenceName" : "Personal Grade",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [ ]
+  },
+  "subscriptionGroups" : [ ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}
