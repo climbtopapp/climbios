@@ -4,9 +4,11 @@ import SwiftUI
 /// Matches the web's screen-profile
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
+    @StateObject private var storeKit = StoreKitManager.shared
 
     @State private var rankStats: UserRankStats?
     @State private var isLoadingProfile = false
+    @State private var showPurchaseSheet = false
 
     var body: some View {
         ScrollView {
@@ -20,6 +22,9 @@ struct ProfileView: View {
         .sheet(isPresented: $appState.showSettings) {
             SettingsView()
                 .environmentObject(appState)
+        }
+        .sheet(isPresented: $showPurchaseSheet) {
+            PersonalGradePurchaseSheet(storeKit: storeKit)
         }
         .task { await loadProfile() }
     }
@@ -76,8 +81,16 @@ struct ProfileView: View {
 
             // Stats grid
             HStack(spacing: 16) {
-                statBox(value: gradeDisplay, label: "Grade")
-                statBox(value: "\(appState.currentProfile?.votesCast ?? 0)", label: "Votes Cast")
+                if storeKit.isGradePurchased {
+                    statBox(value: gradeDisplay, label: "Grade", isLocked: false)
+                } else {
+                    Button(action: { showPurchaseSheet = true }) {
+                        statBox(value: "🔒 $0.99", label: "Grade", isLocked: true)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                statBox(value: "\(appState.currentProfile?.votesCast ?? 0)", label: "Votes Cast", isLocked: false)
             }
             .padding(.bottom, 24)
 
@@ -107,11 +120,11 @@ struct ProfileView: View {
     }
 
     @ViewBuilder
-    private func statBox(value: String, label: String) -> some View {
+    private func statBox(value: String, label: String, isLocked: Bool = false) -> some View {
         VStack(spacing: 2) {
             Text(value)
-                .font(ClimbTheme.displayFont(size: 28))
-                .foregroundColor(ClimbTheme.primaryColor)
+                .font(ClimbTheme.displayFont(size: isLocked ? 22 : 28))
+                .foregroundColor(isLocked ? ClimbTheme.accentColor : ClimbTheme.primaryColor)
                 .shadow(color: .black, radius: 0, x: 1, y: 1)
                 .minimumScaleFactor(0.5)
                 .lineLimit(1)
@@ -245,6 +258,128 @@ struct ProfileView: View {
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let rootVC = windowScene.windows.first?.rootViewController {
             rootVC.present(activityVC, animated: true)
+        }
+    }
+}
+
+/// Purchase sheet modal for unlocking Personal Grade via StoreKit 2
+struct PersonalGradePurchaseSheet: View {
+    @ObservedObject var storeKit: StoreKitManager
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Spacer().frame(height: 10)
+
+            // Header
+            VStack(spacing: 8) {
+                Text("UNLOCK PERSONAL GRADE")
+                    .font(ClimbTheme.displayFont(size: 24))
+                    .foregroundColor(ClimbTheme.primaryColor)
+                    .multilineTextAlignment(.center)
+
+                Text("Find out your official letter grade based on head-to-head match votes across Climb!")
+                    .font(ClimbTheme.bodyFont(size: 14))
+                    .foregroundColor(ClimbTheme.textMuted)
+                    .multilineTextAlignment(.center)
+            }
+
+            // Price tag box
+            VStack(spacing: 4) {
+                Text("PERSONAL GRADE")
+                    .font(ClimbTheme.bodyFont(size: 11))
+                    .fontWeight(.bold)
+                    .foregroundColor(ClimbTheme.textMuted)
+                    .textCase(.uppercase)
+
+                Text("$0.99")
+                    .font(ClimbTheme.displayFont(size: 42))
+                    .foregroundColor(ClimbTheme.accentColor)
+                    .shadow(color: .black, radius: 0, x: 2, y: 2)
+
+                Text("One-time purchase • Lifetime access")
+                    .font(ClimbTheme.bodyFont(size: 12))
+                    .foregroundColor(ClimbTheme.textMuted)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(20)
+            .background(ClimbTheme.bgSecondary)
+            .overlay(
+                Rectangle()
+                    .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+            )
+
+            // Feature Highlights
+            VStack(alignment: .leading, spacing: 12) {
+                featureRow(icon: "star.fill", text: "Reveal your official Letter Grade (A+, A, B, C...)")
+                featureRow(icon: "chart.line.uptrend.xyaxis", text: "Real-time ELO rating score calculation")
+                featureRow(icon: "trophy.fill", text: "Compare your score on Global & Regional leaderboards")
+            }
+            .padding(.vertical, 8)
+
+            if let errorMsg = storeKit.errorMessage {
+                Text(errorMsg)
+                    .font(ClimbTheme.bodyFont(size: 13))
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+            }
+
+            Spacer()
+
+            // Buttons
+            VStack(spacing: 12) {
+                Button(action: {
+                    Task {
+                        let success = await storeKit.purchaseGrade()
+                        if success {
+                            dismiss()
+                        }
+                    }
+                }) {
+                    HStack {
+                        if storeKit.isLoading {
+                            ProgressView()
+                                .tint(.black)
+                        } else {
+                            Text("Unlock for $0.99")
+                        }
+                    }
+                }
+                .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: true))
+                .disabled(storeKit.isLoading)
+
+                Button("Restore Purchases") {
+                    Task {
+                        await storeKit.restorePurchases()
+                        if storeKit.isGradePurchased {
+                            dismiss()
+                        }
+                    }
+                }
+                .buttonStyle(BrutalistTextButtonStyle())
+                .disabled(storeKit.isLoading)
+
+                Button("Maybe Later") {
+                    dismiss()
+                }
+                .font(ClimbTheme.bodyFont(size: 13))
+                .foregroundColor(ClimbTheme.textMuted)
+                .padding(.top, 4)
+            }
+        }
+        .padding(24)
+        .background(ClimbTheme.bgPrimary)
+    }
+
+    private func featureRow(icon: String, text: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundColor(ClimbTheme.primaryColor)
+                .frame(width: 24)
+            Text(text)
+                .font(ClimbTheme.bodyFont(size: 13))
+                .foregroundColor(ClimbTheme.textMain)
         }
     }
 }

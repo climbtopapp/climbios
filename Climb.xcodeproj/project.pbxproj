@@ -20,6 +20,7 @@
 		4E3FDDFA4345CF33FF2B32CE /* LeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C81E3A5A94C9E835FFA9AAE3 /* LeaderboardView.swift */; };
 		50A42777067511366D7ECAB6 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3600D639A9199C9C16A5E439 /* AuthView.swift */; };
 		571A0CB59DFE066942469B58 /* Cities.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6C3A9FCEBCFD0BA0DA137BC /* Cities.swift */; };
+		5885731F5F7BE07D28BD6365 /* StoreKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6471FAA4E75B1376BDD58693 /* StoreKitManager.swift */; };
 		5A44BC44576AF4B83E7A0768 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0C875AF573F67457B2AB78 /* RegisterView.swift */; };
 		5EF865823BCE7DFEF228F210 /* SafetyInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33A0B8A4D88651FB04F3209D /* SafetyInfoView.swift */; };
 		62E9E3F92A968F800622C986 /* ClubsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2876BCE47A48B9CF49889216 /* ClubsView.swift */; };
@@ -45,6 +46,7 @@
 		33A0B8A4D88651FB04F3209D /* SafetyInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyInfoView.swift; sourceTree = "<group>"; };
 		3600D639A9199C9C16A5E439 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
 		58CC57BB4689DB109B90416F /* CityPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CityPickerView.swift; sourceTree = "<group>"; };
+		6471FAA4E75B1376BDD58693 /* StoreKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitManager.swift; sourceTree = "<group>"; };
 		65024901C59C2F68BBEAF969 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		8484A25CE14F87F443A96E22 /* ImageCropperView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCropperView.swift; sourceTree = "<group>"; };
 		8C1ACC587FA767B98316F69A /* VT323-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "VT323-Regular.ttf"; sourceTree = "<group>"; };
@@ -82,6 +84,7 @@
 			isa = PBXGroup;
 			children = (
 				EC444458CE4FD78EE97C4EB9 /* AppState.swift */,
+				6471FAA4E75B1376BDD58693 /* StoreKitManager.swift */,
 				025D48A708EE064F58306D2B /* SupabaseManager.swift */,
 			);
 			path = Core;
@@ -354,6 +357,7 @@
 				ECC9B181EC8D2420A3E4762E /* RetroIcon.swift in Sources */,
 				5EF865823BCE7DFEF228F210 /* SafetyInfoView.swift in Sources */,
 				8C0D2F8F48A096BF024A7A8D /* SettingsView.swift in Sources */,
+				5885731F5F7BE07D28BD6365 /* StoreKitManager.swift in Sources */,
 				3FABE01C11377D0040E06BE0 /* SupabaseManager.swift in Sources */,
 				FA97FA5FA06FB2C411484CB9 /* Theme.swift in Sources */,
 			);
