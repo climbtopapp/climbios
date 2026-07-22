@@ -86,7 +86,9 @@ struct SafetyInfoView: View {
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }
-                    // Contact Support button
+                    }
+
+                    // Contact Support button (rendered ONCE at bottom)
                     Button(action: openSupportEmail) {
                         HStack(spacing: 8) {
                             Image(systemName: "envelope.fill")
@@ -112,7 +114,6 @@ struct SafetyInfoView: View {
                             .foregroundColor(ClimbTheme.textMuted)
                     }
                 }
-            }
             }
         }
     }
