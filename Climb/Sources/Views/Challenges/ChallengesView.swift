@@ -68,36 +68,31 @@ struct ChallengesView: View {
 
     // Side-Eye Agency Card Component
     private var sideEyeAgencyCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Text("Side-Eye")
-                            .font(ClimbTheme.displayFont(size: 22))
-                            .fontWeight(.bold)
-                            .foregroundColor(ClimbTheme.textMain)
+        VStack(alignment: .leading, spacing: 14) {
+            // Header Row: Side-Eye Title + Badge + Web Link
+            HStack(alignment: .center, spacing: 10) {
+                HStack(spacing: 8) {
+                    Text("Side-Eye")
+                        .font(ClimbTheme.displayFont(size: 24))
+                        .fontWeight(.bold)
+                        .foregroundColor(ClimbTheme.textMain)
 
-                        Text("IN-HOUSE")
-                            .font(ClimbTheme.bodyFont(size: 10))
-                            .fontWeight(.bold)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(ClimbTheme.primaryColor)
-                            .foregroundColor(.white)
-                    }
-
-                    Text("Our in house talent agency")
-                        .font(ClimbTheme.bodyFont(size: 14))
-                        .foregroundColor(ClimbTheme.textMuted)
+                    Text("IN-HOUSE")
+                        .font(ClimbTheme.bodyFont(size: 10))
+                        .fontWeight(.bold)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(ClimbTheme.primaryColor)
+                        .foregroundColor(.white)
                 }
 
                 Spacer()
 
-                // Web Icon & Link
+                // Web Link Button
                 Link(destination: URL(string: "https://side-eye.xyz")!) {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 5) {
                         Image(systemName: "globe")
-                            .font(.system(size: 14, weight: .bold))
+                            .font(.system(size: 13, weight: .bold))
                         Text("side-eye.xyz")
                             .font(ClimbTheme.bodyFont(size: 12))
                             .fontWeight(.bold)
@@ -105,7 +100,7 @@ struct ChallengesView: View {
                             .font(.system(size: 10, weight: .bold))
                     }
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 7)
                     .background(ClimbTheme.bgPrimary)
                     .foregroundColor(ClimbTheme.primaryColor)
                     .overlay(
@@ -115,12 +110,20 @@ struct ChallengesView: View {
                 }
             }
 
+            // Description 1
+            Text("Our in house talent agency")
+                .font(ClimbTheme.bodyFont(size: 15))
+                .fontWeight(.semibold)
+                .foregroundColor(ClimbTheme.primaryColor)
+
+            // Description 2
             Text("Recruiting top-voted models & talent directly through Climb regional leaderboards.")
                 .font(ClimbTheme.bodyFont(size: 13))
                 .foregroundColor(ClimbTheme.textMain)
-                .lineLimit(3)
+                .lineSpacing(3)
         }
-        .padding(16)
+        .padding(20)
+        .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
         .background(ClimbTheme.bgSecondary)
         .overlay(
             Rectangle()
@@ -129,7 +132,7 @@ struct ChallengesView: View {
         .shadow(color: .black, radius: 0, x: 3, y: 3)
     }
 
-    // Blank / Placeholder Card Component
+    // Blank / Placeholder Card Component (Taller Vertically)
     private func upcomingOpportunityCard(title: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
@@ -137,8 +140,8 @@ struct ChallengesView: View {
                 .fontWeight(.bold)
                 .foregroundColor(ClimbTheme.textMuted)
         }
-        .frame(maxWidth: .infinity, minHeight: 70, alignment: .leading)
-        .padding(18)
+        .frame(maxWidth: .infinity, minHeight: 110, alignment: .leading)
+        .padding(20)
         .background(ClimbTheme.bgSecondary.opacity(0.5))
         .overlay(
             Rectangle()

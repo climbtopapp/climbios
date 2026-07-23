@@ -333,7 +333,6 @@ struct MashView: View {
 
         Task {
             await appState.castVote(winnerId: winnerId, loserId: loserId)
-            appState.showToastMessage("Vote registered!", type: .success)
 
             try? await Task.sleep(for: .milliseconds(200))
 

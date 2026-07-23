@@ -112,11 +112,7 @@ struct ProfileView: View {
     }
 
     private var gradeDisplay: String {
-        let votes = appState.currentProfile?.votesCast ?? 0
-        if votes < 250 {
-            return "\(250 - votes) more"
-        }
-        return eloToGrade(appState.currentProfile?.elo)
+        eloToGrade(appState.currentProfile?.elo)
     }
 
     @ViewBuilder
