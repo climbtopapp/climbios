@@ -13,7 +13,6 @@ struct ChallengesView: View {
                     Text("CHALLENGES")
                         .font(ClimbTheme.logoFont(size: 40))
                         .foregroundColor(ClimbTheme.primaryColor)
-                        .shadow(color: .black, radius: 0, x: 2, y: 2)
 
                     Text("Exclusive modeling & casting invites")
                         .font(ClimbTheme.bodyFont(size: 13))
@@ -129,6 +128,7 @@ struct ChallengesView: View {
             Rectangle()
                 .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
         )
+        .compositingGroup()
         .shadow(color: .black, radius: 0, x: 3, y: 3)
     }
 
@@ -150,13 +150,15 @@ struct ChallengesView: View {
     }
 }
 
-/// First-time Onboarding Explainer Sheet
+/// First-time Onboarding Explainer Sheet with 18+ Age Verification
 struct ChallengesExplainerSheet: View {
     @Binding var isPresented: Bool
     let onAccept: () -> Void
 
+    @State private var isAgeVerified: Bool = false
+
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 20) {
             Spacer().frame(height: 10)
 
             // Retro Icon Box
@@ -173,7 +175,7 @@ struct ChallengesExplainerSheet: View {
                 )
 
             // Header Title
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 Text("MODELING & CASTING")
                     .font(ClimbTheme.displayFont(size: 24))
                     .foregroundColor(ClimbTheme.primaryColor)
@@ -186,7 +188,7 @@ struct ChallengesExplainerSheet: View {
             }
 
             // Explainer Box
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 14) {
                 explainerRow(
                     icon: "mappin.and.ellipse",
                     title: "Regional Invites",
@@ -214,12 +216,38 @@ struct ChallengesExplainerSheet: View {
 
             Spacer()
 
+            // 18+ Age Verification Checkbox
+            Button(action: { isAgeVerified.toggle() }) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Rectangle()
+                            .stroke(ClimbTheme.borderColor, lineWidth: 2)
+                            .background(isAgeVerified ? ClimbTheme.primaryColor : ClimbTheme.bgSecondary)
+                            .frame(width: 22, height: 22)
+
+                        if isAgeVerified {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(.black)
+                        }
+                    }
+
+                    Text("I confirm I am 18 years of age or older.")
+                        .font(ClimbTheme.bodyFont(size: 13))
+                        .fontWeight(.bold)
+                        .foregroundColor(ClimbTheme.textMain)
+                }
+            }
+            .buttonStyle(.plain)
+
             // Accept Button
             Button(action: onAccept) {
                 Text("I Understand")
                     .font(ClimbTheme.displayFont(size: 16))
             }
             .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: true))
+            .disabled(!isAgeVerified)
+            .opacity(isAgeVerified ? 1.0 : 0.5)
             .padding(.bottom, 20)
         }
         .padding(24)

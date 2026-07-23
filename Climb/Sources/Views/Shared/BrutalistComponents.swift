@@ -46,6 +46,7 @@ struct BrutalistTextField: View {
     var hint: String? = nil
     var keyboardType: UIKeyboardType = .default
     var autocapitalization: TextInputAutocapitalization = .sentences
+    var textContentType: UITextContentType? = nil
     var disabled: Bool = false
 
     var body: some View {
@@ -68,6 +69,7 @@ struct BrutalistTextField: View {
                 )
                 .keyboardType(keyboardType)
                 .textInputAutocapitalization(autocapitalization)
+                .textContentType(textContentType)
                 .disabled(disabled)
 
             if let hint = hint {

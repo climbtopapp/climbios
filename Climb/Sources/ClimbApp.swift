@@ -21,6 +21,7 @@ struct ClimbApp: App {
                     }
                 }
                 .task {
+                    NotificationManager.shared.setupNotifications()
                     appState.listenForAuthChanges()
                     await appState.initAuth()
                 }

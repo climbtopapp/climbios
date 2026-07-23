@@ -10,7 +10,7 @@ struct NotificationsFeedView: View {
             VStack(spacing: 0) {
                 // List
                 ScrollView {
-                    if appState.notifications.isEmpty {
+                    if filteredNotifications.isEmpty {
                         VStack(spacing: 12) {
                             Text("No notifications yet!")
                                 .font(ClimbTheme.bodyFont(size: 14))
@@ -20,7 +20,7 @@ struct NotificationsFeedView: View {
                         .padding(.vertical, 40)
                     } else {
                         LazyVStack(spacing: 12) {
-                            ForEach(appState.notifications) { item in
+                            ForEach(filteredNotifications) { item in
                                 notificationRow(item)
                             }
                         }
@@ -44,6 +44,17 @@ struct NotificationsFeedView: View {
             .task {
                 await appState.fetchNotifications()
             }
+        }
+    }
+
+    private var filteredNotifications: [NotificationItem] {
+        let isGradePurchased = StoreKitManager.shared.isGradePurchased
+        return appState.notifications.filter { item in
+            let isGradeNotification = item.type == "grade_up" || item.title.lowercased().contains("grade")
+            if isGradeNotification {
+                return isGradePurchased
+            }
+            return true
         }
     }
 

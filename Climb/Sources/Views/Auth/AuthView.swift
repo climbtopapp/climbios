@@ -159,7 +159,8 @@ struct AuthView: View {
                 text: $verificationCode,
                 placeholder: "123456",
                 hint: "Check your inbox (and spam folder) for the verification code.",
-                keyboardType: .numberPad
+                keyboardType: .numberPad,
+                textContentType: .oneTimeCode
             )
 
             Button(action: { Task { await verifyCode() } }) {

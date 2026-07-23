@@ -86,7 +86,9 @@ struct RegisterView: View {
                 label: "First Name",
                 text: $firstName,
                 placeholder: "Your first name",
-                hint: "Your first name will be public."
+                hint: "Your first name will be public.",
+                autocapitalization: .words,
+                textContentType: .givenName
             )
 
             Button("Next") {

@@ -32,6 +32,7 @@
 		C4C11D9860C58642A99B3DFC /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 93B483907F23529577D84308 /* Supabase */; };
 		C886FB5D1DDFF62CECD75E77 /* VT323-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8C1ACC587FA767B98316F69A /* VT323-Regular.ttf */; };
 		CB1EECFB77E356EC0347740D /* BrutalistComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A9A20FEA8412B28DC704B0 /* BrutalistComponents.swift */; };
+		CECC33BCFC1729A16A3BBC1B /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB66D896F67FAE98B861B1E4 /* NotificationManager.swift */; };
 		DB88B6F74A6DA2CA8CF93013 /* ImageCropperView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8484A25CE14F87F443A96E22 /* ImageCropperView.swift */; };
 		ECC9B181EC8D2420A3E4762E /* RetroIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1913C5D8FE912D213B26261B /* RetroIcon.swift */; };
 		FA97FA5FA06FB2C411484CB9 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1051716D7447168B0586B49 /* Theme.swift */; };
@@ -55,6 +56,7 @@
 		9980B35ADAA6934118D80818 /* Sen-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sen-Bold.ttf"; sourceTree = "<group>"; };
 		9A0C875AF573F67457B2AB78 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
 		A1F3A107C4989C7EC73946F4 /* ChallengesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengesView.swift; sourceTree = "<group>"; };
+		AB66D896F67FAE98B861B1E4 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		AD0C0FDCD546578B76703841 /* EloGrade.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EloGrade.swift; sourceTree = "<group>"; };
 		AEBD678616EE9992E87BE53A /* MashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MashView.swift; sourceTree = "<group>"; };
 		BF6313E2F5AFD89086C5C6D4 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
@@ -179,6 +181,7 @@
 				D6C3A9FCEBCFD0BA0DA137BC /* Cities.swift */,
 				AD0C0FDCD546578B76703841 /* EloGrade.swift */,
 				1B6123BD63D72B76B795AED0 /* ImageCacheManager.swift */,
+				AB66D896F67FAE98B861B1E4 /* NotificationManager.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -355,6 +358,7 @@
 				4E3FDDFA4345CF33FF2B32CE /* LeaderboardView.swift in Sources */,
 				1E9E6E5AEDDE94A18E7E269F /* MainTabView.swift in Sources */,
 				81282342310CFC9378D283D7 /* MashView.swift in Sources */,
+				CECC33BCFC1729A16A3BBC1B /* NotificationManager.swift in Sources */,
 				4BBC9C792ADDC42A308D2AF2 /* NotificationsFeedView.swift in Sources */,
 				74E3DABA4AE96924DC942611 /* ProfileView.swift in Sources */,
 				5A44BC44576AF4B83E7A0768 /* RegisterView.swift in Sources */,

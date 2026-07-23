@@ -49,7 +49,9 @@ struct SettingsView: View {
                     BrutalistTextField(
                         label: "First Name",
                         text: $firstName,
-                        placeholder: "Your first name"
+                        placeholder: "Your first name",
+                        autocapitalization: .words,
+                        textContentType: .givenName
                     )
 
                     // Gender (read-only)
