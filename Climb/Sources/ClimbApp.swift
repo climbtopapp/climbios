@@ -37,7 +37,7 @@ struct RootView: View {
         ZStack {
             ClimbTheme.bgPrimary.ignoresSafeArea()
 
-            if appState.isLoading && appState.isAuthenticated {
+            if appState.isLoading {
                 LoaderView()
             } else if !appState.isAuthenticated {
                 LandingView()

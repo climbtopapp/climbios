@@ -24,7 +24,7 @@ struct CityPickerView: View {
                 .padding(.bottom, 8)
 
             // Search input
-            TextField("Type to search city...", text: $searchText, onEditingChanged: { editing in
+            TextField("Type to search state...", text: $searchText, onEditingChanged: { editing in
                 isExpanded = editing
             })
             .font(ClimbTheme.bodyFont(size: 16))
@@ -46,7 +46,7 @@ struct CityPickerView: View {
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         if filteredCities.isEmpty {
-                            Text("No cities found")
+                            Text("No states found")
                                 .font(ClimbTheme.bodyFont(size: 15))
                                 .foregroundColor(ClimbTheme.textMuted)
                                 .padding(10)

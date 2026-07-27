@@ -170,6 +170,7 @@ final class AppState: ObservableObject {
         self.currentUser = demoUser
         self.currentProfile = demoProfile
         self.isAuthenticated = true
+        self.isLoading = false
     }
 
     // Navigation
