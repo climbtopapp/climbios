@@ -48,14 +48,7 @@ struct NotificationsFeedView: View {
     }
 
     private var filteredNotifications: [NotificationItem] {
-        let isGradePurchased = StoreKitManager.shared.isGradePurchased
-        return appState.notifications.filter { item in
-            let isGradeNotification = item.type == "grade_up" || item.title.lowercased().contains("grade")
-            if isGradeNotification {
-                return isGradePurchased
-            }
-            return true
-        }
+        appState.notifications
     }
 
     private func isNewNotification(_ createdAt: String) -> Bool {

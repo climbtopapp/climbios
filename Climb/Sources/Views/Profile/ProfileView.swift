@@ -81,16 +81,10 @@ struct ProfileView: View {
 
             // Stats grid
             HStack(spacing: 16) {
-                if storeKit.isGradePurchased {
-                    statBox(value: gradeDisplay, label: "Grade", isLocked: false)
-                } else {
-                    Button(action: { showPurchaseSheet = true }) {
-                        statBox(value: "🔒 $0.99", label: "Grade", isLocked: true)
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                statBox(value: "\(appState.currentProfile?.votesCast ?? 0)", label: "Votes Cast", isLocked: false)
+                let votes = appState.currentProfile?.votesCast ?? 0
+                let isGradeLocked = votes < 100
+                statBox(value: gradeDisplay, label: "Grade", isLocked: isGradeLocked)
+                statBox(value: "\(votes)", label: "Votes Cast", isLocked: false)
             }
             .padding(.bottom, 24)
 
@@ -112,26 +106,32 @@ struct ProfileView: View {
     }
 
     private var gradeDisplay: String {
-        eloToGrade(appState.currentProfile?.elo)
+        let votes = appState.currentProfile?.votesCast ?? 0
+        if votes < 100 {
+            return "\(100 - votes) more"
+        }
+        return eloToGrade(appState.currentProfile?.elo)
     }
 
     @ViewBuilder
     private func statBox(value: String, label: String, isLocked: Bool = false) -> some View {
         VStack(spacing: 2) {
             if isLocked {
-                HStack(spacing: 6) {
+                HStack(spacing: 4) {
                     Image(systemName: "lock.fill")
-                        .font(.system(size: 18))
+                        .font(.system(size: 14))
                         .foregroundColor(ClimbTheme.accentColor)
-                    Text("$0.99")
-                        .font(ClimbTheme.displayFont(size: 22))
+                    Text(value)
+                        .font(ClimbTheme.displayFont(size: 18))
                         .foregroundColor(ClimbTheme.accentColor)
                         .shadow(color: .black, radius: 0, x: 1, y: 1)
+                        .minimumScaleFactor(0.5)
+                        .lineLimit(1)
                 }
             } else {
                 Text(value)
-                    .font(ClimbTheme.displayFont(size: 28))
-                    .foregroundColor(ClimbTheme.primaryColor)
+                    .font(ClimbTheme.displayFont(size: 24))
+                    .foregroundColor(ClimbTheme.textMain)
                     .shadow(color: .black, radius: 0, x: 1, y: 1)
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
