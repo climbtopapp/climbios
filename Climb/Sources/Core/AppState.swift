@@ -699,7 +699,6 @@ final class AppState: ObservableObject {
         }
 
         self.currentProfile = profile
-        showToastMessage("Feature Unlocked! 🎉", type: .success)
         return true
     }
 
@@ -739,7 +738,6 @@ final class AppState: ObservableObject {
         }
 
         self.currentProfile = profile
-        showToastMessage("Instagram Unlocked! 🎉", type: .success)
         return true
     }
 

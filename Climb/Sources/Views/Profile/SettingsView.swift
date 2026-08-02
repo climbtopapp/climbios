@@ -8,7 +8,6 @@ struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
 
     @State private var firstName = ""
-    @State private var instagramHandle = ""
     @State private var votePref = "everyone"
     @State private var selectedCity: City?
     @State private var isSaving = false
@@ -25,7 +24,6 @@ struct SettingsView: View {
                 VStack(spacing: 20) {
                     avatarSection
                     firstNameField
-                    instagramSection
                     genderSection
                     votePrefSection
                     CityPickerView(selectedCity: $selectedCity)
@@ -123,20 +121,6 @@ struct SettingsView: View {
         }
     }
 
-    @ViewBuilder
-    private var igBonusHint: some View {
-        if appState.currentProfile?.claimedIgBonus == true {
-            Text("✅ +50 FREE Steps claimed!")
-                .font(ClimbTheme.bodyFont(size: 12))
-                .foregroundColor(ClimbTheme.textMuted)
-        } else {
-            Text("🎁 Save your Instagram handle to claim +50 FREE Steps!")
-                .font(ClimbTheme.bodyFont(size: 12))
-                .fontWeight(.bold)
-                .foregroundColor(ClimbTheme.primaryColor)
-        }
-    }
-
     private var supportMailURL: URL {
         URL(string: "mailto:anything@vexaiulkoo.resend.app?subject=Climb%20App%20Support") ?? URL(fileURLWithPath: "/")
     }
@@ -149,18 +133,6 @@ struct SettingsView: View {
             autocapitalization: .words,
             textContentType: .givenName
         )
-    }
-
-    private var instagramSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            BrutalistTextField(
-                label: "Instagram Handle",
-                text: $instagramHandle,
-                placeholder: "@yourusername",
-                autocapitalization: .never
-            )
-            igBonusHint
-        }
     }
 
     private var genderSection: some View {
@@ -294,7 +266,6 @@ struct SettingsView: View {
 
     private func loadCurrentValues() {
         firstName = appState.currentProfile?.firstName ?? ""
-        instagramHandle = appState.currentProfile?.instagramHandle ?? ""
         votePref = appState.currentProfile?.votePreference ?? "everyone"
         if let stateName = appState.currentProfile?.state {
             selectedCity = CITIES.first { $0.name == stateName }
@@ -308,7 +279,6 @@ struct SettingsView: View {
         }
 
         isSaving = true
-        _ = await appState.saveInstagramHandle(rawHandle: instagramHandle)
         do {
             try await appState.updateProfile(
                 firstName: firstName.trimmingCharacters(in: .whitespaces),

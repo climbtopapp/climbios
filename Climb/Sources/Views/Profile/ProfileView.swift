@@ -11,6 +11,8 @@ struct ProfileView: View {
     @State private var showStepsExplainer = false
     @State private var showGradeConfirm = false
     @State private var showRanksConfirm = false
+    @State private var instagramHandle = ""
+    @State private var isSavingIg = false
 
     var body: some View {
         ScrollView {
@@ -50,6 +52,7 @@ struct ProfileView: View {
         }
         .task {
             await loadProfile()
+            instagramHandle = appState.currentProfile?.instagramHandle?.replacingOccurrences(of: "@", with: "") ?? ""
             let hasSeen = UserDefaults.standard.bool(forKey: "has_seen_steps_explainer")
             if !hasSeen {
                 UserDefaults.standard.set(true, forKey: "has_seen_steps_explainer")
@@ -144,6 +147,9 @@ struct ProfileView: View {
                     }
                 }
 
+            // Instagram Handle Card
+            instagramCard
+
             // Share Profile button
             Button(action: shareProfile) {
                 HStack(spacing: 8) {
@@ -153,9 +159,80 @@ struct ProfileView: View {
                 }
             }
             .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: true))
-            .padding(.top, 10)
+            .padding(.top, 16)
         }
         .brutalistCard(padding: 24)
+    }
+
+    private var instagramCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Instagram Handle")
+                .font(ClimbTheme.bodyFont(size: 12))
+                .fontWeight(.bold)
+                .foregroundColor(ClimbTheme.primaryColor)
+                .textCase(.uppercase)
+                .tracking(1)
+
+            HStack(spacing: 8) {
+                HStack(spacing: 2) {
+                    Text("@")
+                        .font(ClimbTheme.bodyFont(size: 15))
+                        .fontWeight(.bold)
+                        .foregroundColor(ClimbTheme.primaryColor)
+                        .padding(.leading, 10)
+
+                    TextField("yourusername", text: $instagramHandle)
+                        .font(ClimbTheme.bodyFont(size: 14))
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
+                        .padding(.vertical, 8)
+                        .padding(.trailing, 8)
+                }
+                .background(ClimbTheme.bgPrimary)
+                .overlay(
+                    Rectangle()
+                        .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                )
+
+                Button(action: {
+                    Task {
+                        isSavingIg = true
+                        let clean = instagramHandle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+                        _ = await appState.saveInstagramHandle(rawHandle: clean)
+                        isSavingIg = false
+                    }
+                }) {
+                    if isSavingIg {
+                        ProgressView().tint(.black)
+                    } else {
+                        Text("Save")
+                            .font(ClimbTheme.bodyFont(size: 13))
+                            .fontWeight(.bold)
+                    }
+                }
+                .buttonStyle(BrutalistSmallButtonStyle())
+                .disabled(isSavingIg)
+            }
+
+            let claimed = appState.currentProfile?.claimedIgBonus ?? false
+            if claimed {
+                Text("✅ +50 FREE Steps claimed!")
+                    .font(ClimbTheme.bodyFont(size: 12))
+                    .foregroundColor(ClimbTheme.textMuted)
+            } else {
+                Text("🎁 Save your Instagram handle to claim +50 FREE Steps!")
+                    .font(ClimbTheme.bodyFont(size: 12))
+                    .fontWeight(.bold)
+                    .foregroundColor(ClimbTheme.primaryColor)
+            }
+        }
+        .padding(14)
+        .background(ClimbTheme.bgSecondary)
+        .overlay(
+            Rectangle()
+                .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+        )
+        .padding(.top, 16)
     }
 
     private var gradeDisplay: String {

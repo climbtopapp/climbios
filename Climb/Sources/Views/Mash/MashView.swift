@@ -101,7 +101,9 @@ struct MashView: View {
             // Steps Counter Bar
             Button(action: { showStepsExplainer = true }) {
                 HStack(spacing: 6) {
-                    Text("👣")
+                    Image(systemName: "shoeprints.fill")
+                        .font(.system(size: 13))
+                        .foregroundColor(ClimbTheme.primaryColor)
                     Text("\(appState.currentProfile?.availableSteps ?? 0) Steps")
                         .font(ClimbTheme.bodyFont(size: 13))
                         .fontWeight(.bold)
@@ -376,7 +378,7 @@ struct MashView: View {
                     appState.showToastMessage("No Instagram handle added", type: .info)
                 }
             }) {
-                Image(systemName: "camera.fill")
+                Image(systemName: "star.fill")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 16, height: 16)
@@ -390,7 +392,7 @@ struct MashView: View {
                     )
             }
             .disabled(!hasIg)
-            .offset(x: -48, y: 90)
+            .offset(x: -48, y: 104)
             .rotationEffect(.degrees(-rotation))
         }
         .frame(maxWidth: .infinity)
@@ -463,8 +465,9 @@ struct StepsExplainerSheet: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 16) {
-                Text("👣")
-                    .font(.system(size: 48))
+                Image(systemName: "shoeprints.fill")
+                    .font(.system(size: 40))
+                    .foregroundColor(ClimbTheme.primaryColor)
 
                 Text("STEPS SYSTEM")
                     .font(ClimbTheme.displayFont(size: 22))
@@ -481,12 +484,12 @@ struct StepsExplainerSheet: View {
                     explainerRow(title: "👥 Clubs", cost: "10 Steps")
                     explainerRow(title: "🎓 Personal Grade", cost: "75 Steps")
                     explainerRow(title: "📈 Official Leaderboard Ranks", cost: "250 Steps")
-                    explainerRow(title: "📸 View User Instagram", cost: "25 Steps")
+                    explainerRow(title: "⭐ View User Instagram", cost: "25 Steps")
 
                     Divider()
                         .background(ClimbTheme.borderColor)
 
-                    Text("🎁 Save your Instagram handle in Settings to claim +50 FREE Steps!")
+                    Text("🎁 Save your Instagram handle on your Me tab to claim +50 FREE Steps!")
                         .font(ClimbTheme.bodyFont(size: 12))
                         .fontWeight(.bold)
                         .foregroundColor(ClimbTheme.primaryColor)
