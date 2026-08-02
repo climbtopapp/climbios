@@ -50,6 +50,47 @@ struct Profile: Codable, Identifiable {
         case unlockedFeatures = "unlocked_features"
         case unlockedInstagrams = "unlocked_instagrams"
     }
+
+    init(id: UUID, email: String? = nil, firstName: String? = nil, gender: String? = nil, votePreference: String? = nil, avatarUrl: String? = nil, latitude: Double? = nil, longitude: Double? = nil, state: String? = nil, elo: Double? = nil, votesCast: Int = 0, createdAt: String? = nil, stepsSpent: Int? = nil, claimedIgBonus: Bool? = nil, instagramHandle: String? = nil, unlockedFeatures: [String]? = nil, unlockedInstagrams: [String]? = nil) {
+        self.id = id
+        self.email = email
+        self.firstName = firstName
+        self.gender = gender
+        self.votePreference = votePreference
+        self.avatarUrl = avatarUrl
+        self.latitude = latitude
+        self.longitude = longitude
+        self.state = state
+        self.elo = elo
+        self.votesCast = votesCast
+        self.createdAt = createdAt
+        self.stepsSpent = stepsSpent
+        self.claimedIgBonus = claimedIgBonus
+        self.instagramHandle = instagramHandle
+        self.unlockedFeatures = unlockedFeatures
+        self.unlockedInstagrams = unlockedInstagrams
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.email = try container.decodeIfPresent(String.self, forKey: .email)
+        self.firstName = try container.decodeIfPresent(String.self, forKey: .firstName)
+        self.gender = try container.decodeIfPresent(String.self, forKey: .gender)
+        self.votePreference = try container.decodeIfPresent(String.self, forKey: .votePreference)
+        self.avatarUrl = try container.decodeIfPresent(String.self, forKey: .avatarUrl)
+        self.latitude = try container.decodeIfPresent(Double.self, forKey: .latitude)
+        self.longitude = try container.decodeIfPresent(Double.self, forKey: .longitude)
+        self.state = try container.decodeIfPresent(String.self, forKey: .state)
+        self.elo = try container.decodeIfPresent(Double.self, forKey: .elo)
+        self.votesCast = (try container.decodeIfPresent(Int.self, forKey: .votesCast)) ?? 0
+        self.createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
+        self.stepsSpent = try container.decodeIfPresent(Int.self, forKey: .stepsSpent)
+        self.claimedIgBonus = try container.decodeIfPresent(Bool.self, forKey: .claimedIgBonus)
+        self.instagramHandle = try container.decodeIfPresent(String.self, forKey: .instagramHandle)
+        self.unlockedFeatures = try container.decodeIfPresent([String].self, forKey: .unlockedFeatures)
+        self.unlockedInstagrams = try container.decodeIfPresent([String].self, forKey: .unlockedInstagrams)
+    }
 }
 
 /// Matchup profile returned from get_matchup RPC
@@ -62,6 +103,19 @@ struct MatchupProfile: Codable, Identifiable {
         case id
         case avatarUrl = "avatar_url"
         case instagramHandle = "instagram_handle"
+    }
+
+    init(id: UUID, avatarUrl: String?, instagramHandle: String?) {
+        self.id = id
+        self.avatarUrl = avatarUrl
+        self.instagramHandle = instagramHandle
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.avatarUrl = try container.decodeIfPresent(String.self, forKey: .avatarUrl)
+        self.instagramHandle = try container.decodeIfPresent(String.self, forKey: .instagramHandle)
     }
 }
 
