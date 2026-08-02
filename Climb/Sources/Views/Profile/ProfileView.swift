@@ -8,7 +8,9 @@ struct ProfileView: View {
 
     @State private var rankStats: UserRankStats?
     @State private var isLoadingProfile = false
-    @State private var showPurchaseSheet = false
+    @State private var showStepsExplainer = false
+    @State private var showGradeConfirm = false
+    @State private var showRanksConfirm = false
 
     var body: some View {
         ScrollView {
@@ -23,10 +25,37 @@ struct ProfileView: View {
             SettingsView()
                 .environmentObject(appState)
         }
-        .sheet(isPresented: $showPurchaseSheet) {
-            PersonalGradePurchaseSheet(storeKit: storeKit)
+        .sheet(isPresented: $showStepsExplainer) {
+            StepsExplainerSheet()
         }
-        .task { await loadProfile() }
+        .confirmationDialog("Unlock Personal Grade", isPresented: $showGradeConfirm, titleVisibility: .visible) {
+            Button("Unlock Personal Grade (75 Steps)") {
+                Task {
+                    _ = await appState.unlockFeature(id: "grade", cost: 75)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Unlock your official Personal Grade for 75 Steps?\n(Your Steps: \(appState.currentProfile?.availableSteps ?? 0))")
+        }
+        .confirmationDialog("Unlock Leaderboard Ranks", isPresented: $showRanksConfirm, titleVisibility: .visible) {
+            Button("Unlock Ranks (250 Steps)") {
+                Task {
+                    _ = await appState.unlockFeature(id: "ranks", cost: 250)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Unlock your official Global, Regional, and Club ranks for 250 Steps?\n(Your Steps: \(appState.currentProfile?.availableSteps ?? 0))")
+        }
+        .task {
+            await loadProfile()
+            let hasSeen = UserDefaults.standard.bool(forKey: "has_seen_steps_explainer")
+            if !hasSeen {
+                UserDefaults.standard.set(true, forKey: "has_seen_steps_explainer")
+                showStepsExplainer = true
+            }
+        }
     }
 
     private var profileCard: some View {
@@ -38,15 +67,7 @@ struct ProfileView: View {
                     if let image = phase.image {
                         image.resizable().scaledToFill()
                     } else {
-                        Rectangle()
-                            .fill(ClimbTheme.bgPrimary)
-                            .overlay(
-                                Image(systemName: "person.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 40, height: 40)
-                                    .foregroundColor(ClimbTheme.accentColor)
-                            )
+                        Rectangle().fill(ClimbTheme.bgPrimary)
                     }
                 }
                 .frame(width: 110, height: 110)
@@ -81,15 +102,47 @@ struct ProfileView: View {
 
             // Stats grid
             HStack(spacing: 16) {
-                let votes = appState.currentProfile?.votesCast ?? 0
-                let isGradeLocked = votes < 100
-                statBox(value: gradeDisplay, label: "Grade", isLocked: isGradeLocked)
-                statBox(value: "\(votes)", label: "Votes Cast", isLocked: false)
+                let avail = appState.currentProfile?.availableSteps ?? 0
+                let isGradeUnlocked = appState.currentProfile?.isUnlocked("grade") ?? false
+
+                Button(action: {
+                    if isGradeUnlocked {
+                        let grade = eloToGrade(appState.currentProfile?.elo)
+                        appState.showToastMessage("Your Personal Grade is \(grade)!", type: .info)
+                    } else {
+                        if avail < 75 {
+                            appState.showToastMessage("Need 75 Steps to unlock Personal Grade. (You have \(avail) Steps)", type: .error)
+                        } else {
+                            showGradeConfirm = true
+                        }
+                    }
+                }) {
+                    statBox(value: isGradeUnlocked ? eloToGrade(appState.currentProfile?.elo) : "75 Steps", label: "Personal Grade", isLocked: !isGradeUnlocked)
+                }
+                .buttonStyle(.plain)
+
+                Button(action: {
+                    showStepsExplainer = true
+                }) {
+                    statBox(value: "\(avail)", label: "Steps", isLocked: false)
+                }
+                .buttonStyle(.plain)
             }
             .padding(.bottom, 24)
 
             // Rankings section
             ranksSection
+                .onTapGesture {
+                    let isRanksUnlocked = appState.currentProfile?.isUnlocked("ranks") ?? false
+                    if !isRanksUnlocked {
+                        let avail = appState.currentProfile?.availableSteps ?? 0
+                        if avail < 250 {
+                            appState.showToastMessage("Need 250 Steps to unlock Leaderboard Ranks. (You have \(avail) Steps)", type: .error)
+                        } else {
+                            showRanksConfirm = true
+                        }
+                    }
+                }
 
             // Share Profile button
             Button(action: shareProfile) {
@@ -213,8 +266,8 @@ struct ProfileView: View {
     }
 
     private var globalRankDisplay: String {
-        let votes = appState.currentProfile?.votesCast ?? 0
-        if votes < 500 { return "\(500 - votes) more votes needed" }
+        let isUnlocked = appState.currentProfile?.isUnlocked("ranks") ?? false
+        if !isUnlocked { return "🔒 250 Steps" }
         if let stats = rankStats, let r = stats.globalRank, let t = stats.totalGlobal, t > 0 {
             return "\(r) / \(t)"
         }
@@ -222,8 +275,8 @@ struct ProfileView: View {
     }
 
     private var stateRankDisplay: String {
-        let votes = appState.currentProfile?.votesCast ?? 0
-        if votes < 500 { return "\(500 - votes) more votes needed" }
+        let isUnlocked = appState.currentProfile?.isUnlocked("ranks") ?? false
+        if !isUnlocked { return "🔒 250 Steps" }
         if let stats = rankStats, let r = stats.stateRank, let t = stats.totalState, t > 0 {
             return "\(r) / \(t)"
         }
@@ -231,8 +284,8 @@ struct ProfileView: View {
     }
 
     private var clubRankDisplay: String {
-        let votes = appState.currentProfile?.votesCast ?? 0
-        if votes < 500 { return "\(500 - votes) more votes needed" }
+        let isUnlocked = appState.currentProfile?.isUnlocked("ranks") ?? false
+        if !isUnlocked { return "🔒 250 Steps" }
         guard appState.currentClubInfo != nil else { return "No Club" }
         if let myIndex = appState.currentClubMembers.firstIndex(where: { $0.userId == appState.currentUser?.id }) {
             return "\(myIndex + 1) / \(appState.currentClubMembers.count)"

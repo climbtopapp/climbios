@@ -20,6 +20,9 @@ struct MashView: View {
 
     @State private var showSafety = false
     @State private var showNotifications = false
+    @State private var showStepsExplainer = false
+    @State private var showIgUnlockModal = false
+    @State private var igUnlockTarget: MatchupProfile?
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -52,9 +55,10 @@ struct MashView: View {
                     .buttonStyle(.plain)
 
                     Button(action: {
-                        let votes = appState.currentProfile?.votesCast ?? 0
-                        if votes < 25 {
-                            appState.showToastMessage("Cast \(25 - votes) more votes to unlock Clubs.", type: .error)
+                        let isClubsUnlocked = appState.currentProfile?.isUnlocked("clubs") ?? false
+                        if !isClubsUnlocked {
+                            appState.showToastMessage("Unlock Clubs for 10 Steps first.", type: .error)
+                            appState.selectedTab = .clubs
                             return
                         }
                         if appState.currentClubInfo == nil {
@@ -93,6 +97,26 @@ struct MashView: View {
                 Spacer()
             }
             .padding(.top, 16)
+
+            // Steps Counter Bar
+            Button(action: { showStepsExplainer = true }) {
+                HStack(spacing: 6) {
+                    Text("👣")
+                    Text("\(appState.currentProfile?.availableSteps ?? 0) Steps")
+                        .font(ClimbTheme.bodyFont(size: 13))
+                        .fontWeight(.bold)
+                        .foregroundColor(ClimbTheme.primaryColor)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 4)
+                .background(ClimbTheme.bgSecondary)
+                .overlay(
+                    Rectangle()
+                        .stroke(ClimbTheme.borderColor, lineWidth: 2)
+                )
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 6)
 
             if hasMatchup {
                 // Voting arena
@@ -199,7 +223,7 @@ struct MashView: View {
                                     Circle()
                                         .stroke(Color.black, lineWidth: 1)
                                 )
-                                .offset(x: 4, y: -4)
+                                .offset(x: 2, y: -2)
                         }
                     }
                 }
@@ -216,6 +240,32 @@ struct MashView: View {
         .sheet(isPresented: $showNotifications) {
             NotificationsFeedView()
                 .environmentObject(appState)
+        }
+        .sheet(isPresented: $showStepsExplainer) {
+            StepsExplainerSheet()
+        }
+        .confirmationDialog("Unlock Instagram", isPresented: $showIgUnlockModal, titleVisibility: .visible) {
+            if let target = igUnlockTarget, let rawHandle = target.instagramHandle {
+                let clean = rawHandle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+                Button("Unlock @\(clean) (25 Steps)") {
+                    Task {
+                        let success = await appState.unlockInstagram(targetUserId: target.id, cost: 25)
+                        if success, let url = URL(string: "https://instagram.com/\(clean)") {
+                            await UIApplication.shared.open(url)
+                        }
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                igUnlockTarget = nil
+            }
+        } message: {
+            if let target = igUnlockTarget, let rawHandle = target.instagramHandle {
+                let clean = rawHandle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+                Text("Unlock @\(clean)'s Instagram profile for 25 Steps?\n(Your Steps: \(appState.currentProfile?.availableSteps ?? 0))")
+            } else {
+                Text("Unlock Instagram for 25 Steps?")
+            }
         }
         .onAppear {
             Task {
@@ -316,8 +366,50 @@ struct MashView: View {
             }
             .offset(x: -48, y: 50)
             .rotationEffect(.degrees(-rotation)) // Counter-rotate
+
+            // Instagram button
+            let hasIg = profile.instagramHandle != nil && !profile.instagramHandle!.isEmpty
+            Button(action: {
+                if hasIg {
+                    handleInstagramTap(profile: profile)
+                } else {
+                    appState.showToastMessage("No Instagram handle added", type: .info)
+                }
+            }) {
+                Image(systemName: "camera.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 16, height: 16)
+                    .foregroundColor(hasIg ? .black : ClimbTheme.textMuted)
+                    .frame(width: 32, height: 32)
+                    .background(hasIg ? ClimbTheme.primaryColor : ClimbTheme.bgSecondary)
+                    .opacity(hasIg ? 1.0 : 0.4)
+                    .overlay(
+                        Rectangle()
+                            .stroke(ClimbTheme.borderColor, lineWidth: 2)
+                    )
+            }
+            .disabled(!hasIg)
+            .offset(x: -48, y: 90)
+            .rotationEffect(.degrees(-rotation))
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private func handleInstagramTap(profile: MatchupProfile) {
+        guard let rawHandle = profile.instagramHandle else { return }
+        let clean = rawHandle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        let isUnlocked = appState.currentProfile?.isInstagramUnlocked(profile.id) ?? false
+        if isUnlocked {
+            if let url = URL(string: "https://instagram.com/\(clean)") {
+                Task { @MainActor in await UIApplication.shared.open(url) }
+            }
+            return
+        }
+
+        igUnlockTarget = profile
+        showIgUnlockModal = true
     }
 
     // MARK: - Actions
@@ -362,5 +454,81 @@ struct MashView: View {
             guard let date = date else { return false }
             return date.timeIntervalSince1970 > lastRead
         }.count
+    }
+}
+
+struct StepsExplainerSheet: View {
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 16) {
+                Text("👣")
+                    .font(.system(size: 48))
+
+                Text("STEPS SYSTEM")
+                    .font(ClimbTheme.displayFont(size: 22))
+                    .foregroundColor(ClimbTheme.primaryColor)
+
+                Text("For each vote you cast on Climb, you gain 1 Step! You can spend your Steps to unlock features and perks across the app.")
+                    .font(ClimbTheme.bodyFont(size: 14))
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(ClimbTheme.textMain)
+                    .padding(.horizontal)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    explainerRow(title: "🏆 Summit / Leaderboard", cost: "25 Steps")
+                    explainerRow(title: "👥 Clubs", cost: "10 Steps")
+                    explainerRow(title: "🎓 Personal Grade", cost: "75 Steps")
+                    explainerRow(title: "📈 Official Leaderboard Ranks", cost: "250 Steps")
+                    explainerRow(title: "📸 View User Instagram", cost: "25 Steps")
+
+                    Divider()
+                        .background(ClimbTheme.borderColor)
+
+                    Text("🎁 Save your Instagram handle in Settings to claim +50 FREE Steps!")
+                        .font(ClimbTheme.bodyFont(size: 12))
+                        .fontWeight(.bold)
+                        .foregroundColor(ClimbTheme.primaryColor)
+                }
+                .padding(16)
+                .background(ClimbTheme.bgSecondary)
+                .overlay(
+                    Rectangle()
+                        .stroke(ClimbTheme.borderColor, lineWidth: 2)
+                )
+                .padding(.horizontal)
+
+                Spacer()
+
+                Button(action: { dismiss() }) {
+                    Text("Got It!")
+                }
+                .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: true))
+                .padding(.horizontal, 24)
+                .padding(.bottom, 20)
+            }
+            .padding(.top, 24)
+            .background(ClimbTheme.bgPrimary)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") { dismiss() }
+                        .foregroundColor(ClimbTheme.textMuted)
+                }
+            }
+        }
+    }
+
+    private func explainerRow(title: String, cost: String) -> some View {
+        HStack {
+            Text(title)
+                .font(ClimbTheme.bodyFont(size: 13))
+                .fontWeight(.medium)
+            Spacer()
+            Text(cost)
+                .font(ClimbTheme.bodyFont(size: 13))
+                .fontWeight(.bold)
+                .foregroundColor(ClimbTheme.primaryColor)
+        }
     }
 }

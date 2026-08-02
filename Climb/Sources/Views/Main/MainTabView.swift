@@ -5,13 +5,15 @@ import SwiftUI
 struct MainTabView: View {
     @EnvironmentObject var appState: AppState
 
-    private var votesNeeded: Int {
-        let votes = appState.currentProfile?.votesCast ?? 0
-        return max(0, 25 - votes)
+    @State private var showSummitUnlockConfirm = false
+    @State private var showClubsUnlockConfirm = false
+
+    private var isSummitUnlocked: Bool {
+        appState.currentProfile?.isUnlocked("leaderboard") ?? false
     }
 
-    private var isLocked: Bool {
-        votesNeeded > 0
+    private var isClubsUnlocked: Bool {
+        appState.currentProfile?.isUnlocked("clubs") ?? false
     }
 
     var body: some View {
@@ -37,9 +39,35 @@ struct MainTabView: View {
             // Bottom nav bar
             HStack(spacing: 0) {
                 tabButton(tab: .mash, icon: "triangle.fill", label: "Climb")
-                tabButton(tab: .leaderboard, icon: "trophy.fill", label: isLocked ? "\(votesNeeded) Votes" : "Summit", locked: isLocked)
+                tabButton(
+                    tab: .leaderboard,
+                    icon: "trophy.fill",
+                    label: isSummitUnlocked ? "Summit" : "🔒 25 Steps",
+                    locked: !isSummitUnlocked,
+                    onTapLocked: {
+                        let avail = appState.currentProfile?.availableSteps ?? 0
+                        if avail < 25 {
+                            appState.showToastMessage("Need 25 Steps to unlock Summit. (You have \(avail) Steps)", type: .error)
+                        } else {
+                            showSummitUnlockConfirm = true
+                        }
+                    }
+                )
                 tabButton(tab: .challenges, icon: "sparkles", label: "Challenges")
-                tabButton(tab: .clubs, icon: "person.3.fill", label: isLocked ? "\(votesNeeded) Votes" : "Clubs", locked: isLocked)
+                tabButton(
+                    tab: .clubs,
+                    icon: "person.3.fill",
+                    label: isClubsUnlocked ? "Clubs" : "🔒 10 Steps",
+                    locked: !isClubsUnlocked,
+                    onTapLocked: {
+                        let avail = appState.currentProfile?.availableSteps ?? 0
+                        if avail < 10 {
+                            appState.showToastMessage("Need 10 Steps to unlock Clubs. (You have \(avail) Steps)", type: .error)
+                        } else {
+                            showClubsUnlockConfirm = true
+                        }
+                    }
+                )
                 tabButton(tab: .profile, icon: "person.fill", label: "Me")
             }
             .frame(height: 72)
@@ -52,25 +80,40 @@ struct MainTabView: View {
         }
         .background(ClimbTheme.bgPrimary)
         .ignoresSafeArea(.container, edges: .bottom)
+        .confirmationDialog("Unlock Summit", isPresented: $showSummitUnlockConfirm, titleVisibility: .visible) {
+            Button("Unlock Summit (25 Steps)") {
+                Task {
+                    let success = await appState.unlockFeature(id: "leaderboard", cost: 25)
+                    if success { appState.selectedTab = .leaderboard }
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Unlock the Summit (Leaderboard) for 25 Steps?\n(Your Steps: \(appState.currentProfile?.availableSteps ?? 0))")
+        }
+        .confirmationDialog("Unlock Clubs", isPresented: $showClubsUnlockConfirm, titleVisibility: .visible) {
+            Button("Unlock Clubs (10 Steps)") {
+                Task {
+                    let success = await appState.unlockFeature(id: "clubs", cost: 10)
+                    if success { appState.selectedTab = .clubs }
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Unlock Clubs for 10 Steps?\n(Your Steps: \(appState.currentProfile?.availableSteps ?? 0))")
+        }
         .task {
             await appState.loadNextMatchup()
         }
     }
 
-    private func tabButton(tab: AppState.AppTab, icon: String, label: String, locked: Bool = false) -> some View {
+    private func tabButton(tab: AppState.AppTab, icon: String, label: String, locked: Bool = false, onTapLocked: (() -> Void)? = nil) -> some View {
         Button(action: {
             if locked {
-                let votes = appState.currentProfile?.votesCast ?? 0
-                let screenName = tab == .clubs ? "Clubs" : "the Summit"
-                appState.showToastMessage("Cast \(25 - votes) more votes to unlock \(screenName).", type: .error)
+                onTapLocked?()
                 return
             }
             appState.selectedTab = tab
-            if tab == .leaderboard {
-                // Leaderboard will load in its onAppear
-            } else if tab == .profile {
-                // Profile will load in its onAppear
-            }
         }) {
             VStack(spacing: 4) {
                 Image(systemName: icon)

@@ -16,6 +16,26 @@ struct Profile: Codable, Identifiable {
     var elo: Double?
     var votesCast: Int
     var createdAt: String?
+    var stepsSpent: Int?
+    var claimedIgBonus: Bool?
+    var instagramHandle: String?
+    var unlockedFeatures: [String]?
+    var unlockedInstagrams: [String]?
+
+    var availableSteps: Int {
+        let votes = votesCast
+        let igBonus = (claimedIgBonus == true) ? 50 : 0
+        let spent = stepsSpent ?? 0
+        return max(0, votes + igBonus - spent)
+    }
+
+    func isUnlocked(_ featureId: String) -> Bool {
+        return unlockedFeatures?.contains(featureId) ?? false
+    }
+
+    func isInstagramUnlocked(_ targetUserId: UUID) -> Bool {
+        return unlockedInstagrams?.contains(targetUserId.uuidString) ?? false
+    }
 
     enum CodingKeys: String, CodingKey {
         case id, email, gender, latitude, longitude, state, elo
@@ -24,6 +44,11 @@ struct Profile: Codable, Identifiable {
         case avatarUrl = "avatar_url"
         case votesCast = "votes_cast"
         case createdAt = "created_at"
+        case stepsSpent = "steps_spent"
+        case claimedIgBonus = "claimed_ig_bonus"
+        case instagramHandle = "instagram_handle"
+        case unlockedFeatures = "unlocked_features"
+        case unlockedInstagrams = "unlocked_instagrams"
     }
 }
 
@@ -31,10 +56,12 @@ struct Profile: Codable, Identifiable {
 struct MatchupProfile: Codable, Identifiable {
     let id: UUID
     let avatarUrl: String?
+    let instagramHandle: String?
 
     enum CodingKeys: String, CodingKey {
         case id
         case avatarUrl = "avatar_url"
+        case instagramHandle = "instagram_handle"
     }
 }
 
@@ -581,6 +608,128 @@ final class AppState: ObservableObject {
             print("Failed to cast vote: \(error)")
             showToastMessage("Could not register vote.", type: .error)
         }
+    }
+
+    @MainActor
+    func unlockFeature(id: String, cost: Int) async -> Bool {
+        guard var profile = currentProfile, let userId = currentUser?.id else { return false }
+        guard profile.availableSteps >= cost else {
+            showToastMessage("Need \(cost) Steps to unlock.", type: .error)
+            return false
+        }
+
+        var currentUnlocked = profile.unlockedFeatures ?? []
+        if currentUnlocked.contains(id) { return true }
+        currentUnlocked.append(id)
+
+        let newSpent = (profile.stepsSpent ?? 0) + cost
+        profile.unlockedFeatures = currentUnlocked
+        profile.stepsSpent = newSpent
+
+        if !isDemoUser {
+            do {
+                struct FeaturesPayload: Encodable {
+                    let unlocked_features: [String]
+                    let steps_spent: Int
+                }
+                try await supabase
+                    .from("profiles")
+                    .update(FeaturesPayload(unlocked_features: currentUnlocked, steps_spent: newSpent))
+                    .eq("id", value: userId.uuidString)
+                    .execute()
+            } catch {
+                print("Failed to save feature unlock: \(error)")
+                showToastMessage("Failed to unlock feature.", type: .error)
+                return false
+            }
+        }
+
+        self.currentProfile = profile
+        showToastMessage("Feature Unlocked! 🎉", type: .success)
+        return true
+    }
+
+    @MainActor
+    func unlockInstagram(targetUserId: UUID, cost: Int = 25) async -> Bool {
+        guard var profile = currentProfile, let userId = currentUser?.id else { return false }
+        guard profile.availableSteps >= cost else {
+            showToastMessage("Need \(cost) Steps to unlock Instagram.", type: .error)
+            return false
+        }
+
+        var currentUnlocked = profile.unlockedInstagrams ?? []
+        let targetIdStr = targetUserId.uuidString
+        if currentUnlocked.contains(targetIdStr) { return true }
+        currentUnlocked.append(targetIdStr)
+
+        let newSpent = (profile.stepsSpent ?? 0) + cost
+        profile.unlockedInstagrams = currentUnlocked
+        profile.stepsSpent = newSpent
+
+        if !isDemoUser {
+            do {
+                struct InstagramsPayload: Encodable {
+                    let unlocked_instagrams: [String]
+                    let steps_spent: Int
+                }
+                try await supabase
+                    .from("profiles")
+                    .update(InstagramsPayload(unlocked_instagrams: currentUnlocked, steps_spent: newSpent))
+                    .eq("id", value: userId.uuidString)
+                    .execute()
+            } catch {
+                print("Failed to save Instagram unlock: \(error)")
+                showToastMessage("Failed to unlock Instagram.", type: .error)
+                return false
+            }
+        }
+
+        self.currentProfile = profile
+        showToastMessage("Instagram Unlocked! 🎉", type: .success)
+        return true
+    }
+
+    @MainActor
+    func saveInstagramHandle(rawHandle: String) async -> Bool {
+        guard var profile = currentProfile, let userId = currentUser?.id else { return false }
+        let clean = rawHandle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let finalHandle = clean.isEmpty ? nil : clean
+
+        var claimed = profile.claimedIgBonus ?? false
+        var awardedBonus = false
+        if !claimed && finalHandle != nil {
+            claimed = true
+            awardedBonus = true
+        }
+
+        profile.instagramHandle = finalHandle
+        profile.claimedIgBonus = claimed
+
+        if !isDemoUser {
+            do {
+                struct IgHandlePayload: Encodable {
+                    let instagram_handle: String?
+                    let claimed_ig_bonus: Bool
+                }
+                try await supabase
+                    .from("profiles")
+                    .update(IgHandlePayload(instagram_handle: finalHandle, claimed_ig_bonus: claimed))
+                    .eq("id", value: userId.uuidString)
+                    .execute()
+            } catch {
+                print("Failed to save Instagram handle: \(error)")
+                showToastMessage("Failed to save Instagram handle.", type: .error)
+                return false
+            }
+        }
+
+        self.currentProfile = profile
+        if awardedBonus {
+            showToastMessage("Instagram handle saved! +50 FREE Steps added! 🎉", type: .success)
+        } else {
+            showToastMessage("Instagram handle saved!", type: .success)
+        }
+        return true
     }
 
     func blockUser(blockedId: UUID) async {
