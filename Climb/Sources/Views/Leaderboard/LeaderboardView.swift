@@ -10,6 +10,9 @@ struct LeaderboardView: View {
     @State private var leaderboardData: [LeaderboardRow] = []
     @State private var userRankStats: UserRankStats?
     @State private var isLoading = true
+    @State private var showNoIgModal = false
+    @State private var showIgUnlockModal = false
+    @State private var targetIgUser: LeaderboardRow?
 
     private let genderOptions: [(label: String, value: String)] = [
         ("Everyone", "everyone"),
@@ -74,18 +77,16 @@ struct LeaderboardView: View {
                         ForEach(Array(leaderboardData.enumerated()), id: \.element.id) { index, row in
                             let isSelf = row.userId == appState.currentUser?.id
                             let votes = appState.currentProfile?.votesCast ?? 0
-                            let displayRank: String = {
-                                if isSelf && votes < 500 { return "--" }
-                                if tabType == .club { return "\(index + 1)" }
-                                return row.relativeRank.map { "\($0)" } ?? "\(index + 1)"
-                            }()
+                            let displayRank = getRowRankDisplay(isSelf: isSelf, votes: votes, index: index, relativeRank: row.relativeRank)
 
                             RankRow(
                                 rank: displayRank,
                                 name: isSelf ? "You" : (row.firstName ?? "Climber"),
                                 location: row.state ?? "Unknown State",
                                 avatarUrl: row.avatarUrl,
-                                rankIndex: index
+                                rankIndex: index,
+                                instagramHandle: row.instagramHandle,
+                                onStarTap: isSelf ? nil : { handleStarTap(row: row) }
                             )
                         }
                     }
@@ -100,9 +101,66 @@ struct LeaderboardView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(ClimbTheme.bgPrimary)
+        .overlay {
+            if showIgUnlockModal, let target = targetIgUser, let rawHandle = target.instagramHandle {
+                let clean = rawHandle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+                BrutalistUnlockModal(
+                    title: "UNLOCK INSTAGRAM",
+                    message: "Unlock @\(clean)'s Instagram profile for 25 Steps?",
+                    cost: 25,
+                    availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    onUnlock: {
+                        showIgUnlockModal = false
+                        Task {
+                            let success = await appState.unlockInstagram(targetUserId: target.userId, cost: 25)
+                            if success, let url = URL(string: "https://instagram.com/\(clean)") {
+                                await UIApplication.shared.open(url)
+                            }
+                        }
+                    },
+                    onCancel: { showIgUnlockModal = false }
+                )
+            }
+        }
+        .overlay {
+            if showNoIgModal {
+                BrutalistInfoModal(
+                    title: "No Instagram Handle",
+                    message: "This user has not added an Instagram handle to their profile yet.",
+                    iconName: "star.fill",
+                    onDismiss: { showNoIgModal = false }
+                )
+            }
+        }
         .onChange(of: selectedTab) { _, _ in Task { await loadData() } }
         .onChange(of: selectedGender) { _, _ in Task { await loadData() } }
         .task { await loadData() }
+    }
+
+    private func getRowRankDisplay(isSelf: Bool, votes: Int, index: Int, relativeRank: Int?) -> String {
+        if isSelf && votes < 500 { return "--" }
+        if tabType == .club { return "\(index + 1)" }
+        if let rel = relativeRank { return "\(rel)" }
+        return "\(index + 1)"
+    }
+
+    private func handleStarTap(row: LeaderboardRow) {
+        guard let rawHandle = row.instagramHandle, !rawHandle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            showNoIgModal = true
+            return
+        }
+
+        let clean = rawHandle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let isUnlocked = appState.currentProfile?.isInstagramUnlocked(row.userId) ?? false
+        if isUnlocked {
+            if let url = URL(string: "https://instagram.com/\(clean)") {
+                Task { @MainActor in await UIApplication.shared.open(url) }
+            }
+            return
+        }
+
+        targetIgUser = row
+        showIgUnlockModal = true
     }
 
     private var tabType: AppState.LeaderboardTab {

@@ -160,6 +160,8 @@ struct RankRow: View {
     let avatarUrl: String?
     var isTopThree: Bool = false
     var rankIndex: Int = 99
+    var instagramHandle: String? = nil
+    var onStarTap: (() -> Void)? = nil
 
     private var badgeBackground: Color {
         switch rankIndex {
@@ -228,6 +230,25 @@ struct RankRow: View {
             }
 
             Spacer()
+
+            if let onStarTap = onStarTap {
+                let hasIg = instagramHandle != nil && !instagramHandle!.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                Button(action: onStarTap) {
+                    Image(systemName: "star.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 14, height: 14)
+                        .foregroundColor(hasIg ? .black : ClimbTheme.textMuted)
+                        .frame(width: 32, height: 32)
+                        .background(hasIg ? ClimbTheme.primaryColor : ClimbTheme.bgSecondary)
+                        .opacity(hasIg ? 1.0 : 0.5)
+                        .overlay(
+                            Rectangle()
+                                .stroke(ClimbTheme.borderColor, lineWidth: 2)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
@@ -298,6 +319,118 @@ struct GenderFilterTabs: View {
                         )
                 }
             }
+        }
+    }
+}
+
+/// Custom In-App Brutalist Unlock Modal
+struct BrutalistUnlockModal: View {
+    let title: String
+    let message: String
+    let cost: Int
+    let availableSteps: Int
+    let onUnlock: () -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.6)
+                .ignoresSafeArea()
+                .onTapGesture { onCancel() }
+
+            VStack(spacing: 16) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 36))
+                    .foregroundColor(ClimbTheme.primaryColor)
+
+                Text(title)
+                    .font(ClimbTheme.displayFont(size: 20))
+                    .foregroundColor(ClimbTheme.primaryColor)
+                    .multilineTextAlignment(.center)
+
+                Text(message)
+                    .font(ClimbTheme.bodyFont(size: 14))
+                    .foregroundColor(ClimbTheme.textMain)
+                    .multilineTextAlignment(.center)
+
+                Text("Your Steps: \(availableSteps)")
+                    .font(ClimbTheme.bodyFont(size: 13))
+                    .fontWeight(.bold)
+                    .foregroundColor(ClimbTheme.textMuted)
+
+                HStack(spacing: 12) {
+                    Button(action: onCancel) {
+                        Text("Cancel")
+                            .font(ClimbTheme.bodyFont(size: 14))
+                            .fontWeight(.bold)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(BrutalistSmallButtonStyle())
+
+                    Button(action: onUnlock) {
+                        Text("Unlock (\(cost) Steps)")
+                            .font(ClimbTheme.bodyFont(size: 14))
+                            .fontWeight(.bold)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: false))
+                }
+                .padding(.top, 4)
+            }
+            .padding(24)
+            .background(ClimbTheme.bgSecondary)
+            .overlay(
+                Rectangle()
+                    .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+            )
+            .padding(.horizontal, 32)
+        }
+    }
+}
+
+/// Custom In-App Brutalist Info / Alert Modal
+struct BrutalistInfoModal: View {
+    let title: String
+    let message: String
+    let iconName: String
+    let onDismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.6)
+                .ignoresSafeArea()
+                .onTapGesture { onDismiss() }
+
+            VStack(spacing: 16) {
+                Image(systemName: iconName)
+                    .font(.system(size: 36))
+                    .foregroundColor(ClimbTheme.primaryColor)
+
+                Text(title)
+                    .font(ClimbTheme.displayFont(size: 20))
+                    .foregroundColor(ClimbTheme.textMain)
+                    .multilineTextAlignment(.center)
+
+                Text(message)
+                    .font(ClimbTheme.bodyFont(size: 14))
+                    .foregroundColor(ClimbTheme.textMuted)
+                    .multilineTextAlignment(.center)
+
+                Button(action: onDismiss) {
+                    Text("Got It")
+                        .font(ClimbTheme.bodyFont(size: 14))
+                        .fontWeight(.bold)
+                }
+                .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: true))
+                .padding(.top, 4)
+            }
+            .padding(24)
+            .background(ClimbTheme.bgSecondary)
+            .overlay(
+                Rectangle()
+                    .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+            )
+            .padding(.horizontal, 32)
         }
     }
 }

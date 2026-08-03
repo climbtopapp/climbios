@@ -30,25 +30,35 @@ struct ProfileView: View {
         .sheet(isPresented: $showStepsExplainer) {
             StepsExplainerSheet()
         }
-        .confirmationDialog("Unlock Personal Grade", isPresented: $showGradeConfirm, titleVisibility: .visible) {
-            Button("Unlock Personal Grade (75 Steps)") {
-                Task {
-                    _ = await appState.unlockFeature(id: "grade", cost: 75)
-                }
+        .overlay {
+            if showGradeConfirm {
+                BrutalistUnlockModal(
+                    title: "UNLOCK PERSONAL GRADE",
+                    message: "Unlock your official Personal Grade for 75 Steps?",
+                    cost: 75,
+                    availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    onUnlock: {
+                        showGradeConfirm = false
+                        Task { _ = await appState.unlockFeature(id: "grade", cost: 75) }
+                    },
+                    onCancel: { showGradeConfirm = false }
+                )
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Unlock your official Personal Grade for 75 Steps?\n(Your Steps: \(appState.currentProfile?.availableSteps ?? 0))")
         }
-        .confirmationDialog("Unlock Leaderboard Ranks", isPresented: $showRanksConfirm, titleVisibility: .visible) {
-            Button("Unlock Ranks (250 Steps)") {
-                Task {
-                    _ = await appState.unlockFeature(id: "ranks", cost: 250)
-                }
+        .overlay {
+            if showRanksConfirm {
+                BrutalistUnlockModal(
+                    title: "UNLOCK LEADERBOARD RANKS",
+                    message: "Unlock your official Global, Regional, and Club ranks for 250 Steps?",
+                    cost: 250,
+                    availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    onUnlock: {
+                        showRanksConfirm = false
+                        Task { _ = await appState.unlockFeature(id: "ranks", cost: 250) }
+                    },
+                    onCancel: { showRanksConfirm = false }
+                )
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Unlock your official Global, Regional, and Club ranks for 250 Steps?\n(Your Steps: \(appState.currentProfile?.availableSteps ?? 0))")
         }
         .task {
             await loadProfile()
@@ -215,12 +225,8 @@ struct ProfileView: View {
             }
 
             let claimed = appState.currentProfile?.claimedIgBonus ?? false
-            if claimed {
-                Text("✅ +50 FREE Steps claimed!")
-                    .font(ClimbTheme.bodyFont(size: 12))
-                    .foregroundColor(ClimbTheme.textMuted)
-            } else {
-                Text("🎁 Save your Instagram handle to claim +50 FREE Steps!")
+            if !claimed {
+                Text("Save your Instagram handle to claim +50 FREE Steps!")
                     .font(ClimbTheme.bodyFont(size: 12))
                     .fontWeight(.bold)
                     .foregroundColor(ClimbTheme.primaryColor)

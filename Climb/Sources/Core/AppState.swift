@@ -127,6 +127,7 @@ struct LeaderboardRow: Codable, Identifiable {
     let avatarUrl: String?
     let state: String?
     let relativeRank: Int?
+    let instagramHandle: String?
 
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
@@ -134,6 +135,26 @@ struct LeaderboardRow: Codable, Identifiable {
         case avatarUrl = "avatar_url"
         case state
         case relativeRank = "relative_rank"
+        case instagramHandle = "instagram_handle"
+    }
+
+    init(userId: UUID, firstName: String?, avatarUrl: String?, state: String?, relativeRank: Int?, instagramHandle: String? = nil) {
+        self.userId = userId
+        self.firstName = firstName
+        self.avatarUrl = avatarUrl
+        self.state = state
+        self.relativeRank = relativeRank
+        self.instagramHandle = instagramHandle
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.userId = try container.decode(UUID.self, forKey: .userId)
+        self.firstName = try container.decodeIfPresent(String.self, forKey: .firstName)
+        self.avatarUrl = try container.decodeIfPresent(String.self, forKey: .avatarUrl)
+        self.state = try container.decodeIfPresent(String.self, forKey: .state)
+        self.relativeRank = try container.decodeIfPresent(Int.self, forKey: .relativeRank)
+        self.instagramHandle = try container.decodeIfPresent(String.self, forKey: .instagramHandle)
     }
 }
 

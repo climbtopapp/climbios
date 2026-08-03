@@ -22,6 +22,7 @@ struct MashView: View {
     @State private var showNotifications = false
     @State private var showStepsExplainer = false
     @State private var showIgUnlockModal = false
+    @State private var showNoIgModal = false
     @State private var igUnlockTarget: MatchupProfile?
 
     var body: some View {
@@ -246,27 +247,37 @@ struct MashView: View {
         .sheet(isPresented: $showStepsExplainer) {
             StepsExplainerSheet()
         }
-        .confirmationDialog("Unlock Instagram", isPresented: $showIgUnlockModal, titleVisibility: .visible) {
-            if let target = igUnlockTarget, let rawHandle = target.instagramHandle {
+        .overlay {
+            if showIgUnlockModal, let target = igUnlockTarget, let rawHandle = target.instagramHandle {
                 let clean = rawHandle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
-                Button("Unlock @\(clean) (25 Steps)") {
-                    Task {
-                        let success = await appState.unlockInstagram(targetUserId: target.id, cost: 25)
-                        if success, let url = URL(string: "https://instagram.com/\(clean)") {
-                            await UIApplication.shared.open(url)
+                BrutalistUnlockModal(
+                    title: "UNLOCK INSTAGRAM",
+                    message: "Unlock @\(clean)'s Instagram profile for 25 Steps?",
+                    cost: 25,
+                    availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    onUnlock: {
+                        showIgUnlockModal = false
+                        Task {
+                            let success = await appState.unlockInstagram(targetUserId: target.id, cost: 25)
+                            if success, let url = URL(string: "https://instagram.com/\(clean)") {
+                                await UIApplication.shared.open(url)
+                            }
                         }
+                    },
+                    onCancel: {
+                        showIgUnlockModal = false
                     }
-                }
+                )
             }
-            Button("Cancel", role: .cancel) {
-                igUnlockTarget = nil
-            }
-        } message: {
-            if let target = igUnlockTarget, let rawHandle = target.instagramHandle {
-                let clean = rawHandle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
-                Text("Unlock @\(clean)'s Instagram profile for 25 Steps?\n(Your Steps: \(appState.currentProfile?.availableSteps ?? 0))")
-            } else {
-                Text("Unlock Instagram for 25 Steps?")
+        }
+        .overlay {
+            if showNoIgModal {
+                BrutalistInfoModal(
+                    title: "No Instagram Handle",
+                    message: "This user has not added an Instagram handle to their profile yet.",
+                    iconName: "star.fill",
+                    onDismiss: { showNoIgModal = false }
+                )
             }
         }
         .onAppear {
@@ -370,13 +381,9 @@ struct MashView: View {
             .rotationEffect(.degrees(-rotation)) // Counter-rotate
 
             // Instagram button
-            let hasIg = profile.instagramHandle != nil && !profile.instagramHandle!.isEmpty
+            let hasIg = profile.instagramHandle != nil && !profile.instagramHandle!.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             Button(action: {
-                if hasIg {
-                    handleInstagramTap(profile: profile)
-                } else {
-                    appState.showToastMessage("No Instagram handle added", type: .info)
-                }
+                handleInstagramTap(profile: profile)
             }) {
                 Image(systemName: "star.fill")
                     .resizable()
@@ -385,13 +392,12 @@ struct MashView: View {
                     .foregroundColor(hasIg ? .black : ClimbTheme.textMuted)
                     .frame(width: 32, height: 32)
                     .background(hasIg ? ClimbTheme.primaryColor : ClimbTheme.bgSecondary)
-                    .opacity(hasIg ? 1.0 : 0.4)
+                    .opacity(hasIg ? 1.0 : 0.5)
                     .overlay(
                         Rectangle()
                             .stroke(ClimbTheme.borderColor, lineWidth: 2)
                     )
             }
-            .disabled(!hasIg)
             .offset(x: -48, y: 104)
             .rotationEffect(.degrees(-rotation))
         }
@@ -399,7 +405,10 @@ struct MashView: View {
     }
 
     private func handleInstagramTap(profile: MatchupProfile) {
-        guard let rawHandle = profile.instagramHandle else { return }
+        guard let rawHandle = profile.instagramHandle, !rawHandle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            showNoIgModal = true
+            return
+        }
         let clean = rawHandle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
         
         let isUnlocked = appState.currentProfile?.isInstagramUnlocked(profile.id) ?? false
