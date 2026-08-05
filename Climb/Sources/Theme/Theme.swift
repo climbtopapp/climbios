@@ -146,3 +146,25 @@ struct BrutalistSmallButtonStyle: ButtonStyle {
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
+
+struct BrutalistDestructiveButtonStyle: ButtonStyle {
+    var isFullWidth: Bool = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(ClimbTheme.bodyFont(size: 16))
+            .fontWeight(.bold)
+            .textCase(.uppercase)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 12)
+            .frame(maxWidth: isFullWidth ? .infinity : nil)
+            .background(ClimbTheme.errorColor)
+            .foregroundColor(.white)
+            .overlay(
+                Rectangle()
+                    .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+            )
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+    }
+}

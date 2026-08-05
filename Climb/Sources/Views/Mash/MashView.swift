@@ -207,9 +207,8 @@ struct MashView: View {
                     showNotifications = true
                 }) {
                     ZStack(alignment: .topTrailing) {
-                        Text("🔔")
-                            .font(ClimbTheme.displayFont(size: 20))
-                            .fontWeight(.bold)
+                        Image(systemName: "bell.fill")
+                            .font(.system(size: 16, weight: .bold))
                             .foregroundColor(ClimbTheme.textMain)
                             .frame(width: 36, height: 36)
                             .background(ClimbTheme.bgSecondary)
@@ -246,6 +245,7 @@ struct MashView: View {
         }
         .sheet(isPresented: $showStepsExplainer) {
             StepsExplainerSheet()
+                .environmentObject(appState)
         }
         .overlay {
             if showIgUnlockModal, let target = igUnlockTarget, let rawHandle = target.instagramHandle {
@@ -285,21 +285,69 @@ struct MashView: View {
                 await appState.fetchNotifications()
             }
         }
-        .confirmationDialog("Block & Report", isPresented: $showBlockModal, titleVisibility: .visible) {
-            Button("Block & Report", role: .destructive) {
-                if let id = blockTargetId {
-                    Task {
-                        await appState.blockUser(blockedId: id)
-                        await appState.loadNextMatchup()
-                        randomizeRotations()
+        .overlay {
+            if showBlockModal {
+                ZStack {
+                    Color.black.opacity(0.6)
+                        .ignoresSafeArea()
+                        .onTapGesture { showBlockModal = false }
+
+                    VStack(spacing: 16) {
+                        Image(systemName: "hand.raised.fill")
+                            .font(.system(size: 36))
+                            .foregroundColor(ClimbTheme.errorColor)
+
+                        Text("BLOCK & REPORT")
+                            .font(ClimbTheme.displayFont(size: 20))
+                            .foregroundColor(ClimbTheme.textMain)
+                            .multilineTextAlignment(.center)
+
+                        Text("Are you sure you wish to block and report this user and their photo?")
+                            .font(ClimbTheme.bodyFont(size: 14))
+                            .foregroundColor(ClimbTheme.textMuted)
+                            .multilineTextAlignment(.center)
+
+                        HStack(spacing: 12) {
+                            Button(action: {
+                                showBlockModal = false
+                                blockTargetId = nil
+                            }) {
+                                Text("Cancel")
+                                    .font(ClimbTheme.bodyFont(size: 14))
+                                    .fontWeight(.bold)
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(BrutalistSmallButtonStyle())
+
+                            Button(action: {
+                                showBlockModal = false
+                                if let id = blockTargetId {
+                                    Task {
+                                        await appState.blockUser(blockedId: id)
+                                        await appState.loadNextMatchup()
+                                        randomizeRotations()
+                                    }
+                                }
+                            }) {
+                                Text("Block & Report")
+                                    .font(ClimbTheme.bodyFont(size: 14))
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(BrutalistDestructiveButtonStyle(isFullWidth: false))
+                        }
+                        .padding(.top, 4)
                     }
+                    .padding(24)
+                    .background(ClimbTheme.bgSecondary)
+                    .overlay(
+                        Rectangle()
+                            .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                    )
+                    .padding(.horizontal, 32)
                 }
             }
-            Button("Cancel", role: .cancel) {
-                blockTargetId = nil
-            }
-        } message: {
-            Text("Are you sure you wish to block and report this user and their photo?")
         }
     }
 
@@ -469,6 +517,7 @@ struct MashView: View {
 }
 
 struct StepsExplainerSheet: View {
+    @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -478,30 +527,37 @@ struct StepsExplainerSheet: View {
                     .font(.system(size: 40))
                     .foregroundColor(ClimbTheme.primaryColor)
 
-                Text("STEPS SYSTEM")
-                    .font(ClimbTheme.displayFont(size: 22))
+                Text("STEPS")
+                    .font(ClimbTheme.displayFont(size: 24))
                     .foregroundColor(ClimbTheme.primaryColor)
 
-                Text("For each vote you cast on Climb, you gain 1 Step! You can spend your Steps to unlock features and perks across the app.")
+                Text("You can spend your steps to gain access to new features and stars to use on other users.")
                     .font(ClimbTheme.bodyFont(size: 14))
                     .multilineTextAlignment(.center)
                     .foregroundColor(ClimbTheme.textMain)
                     .padding(.horizontal)
 
-                VStack(alignment: .leading, spacing: 10) {
-                    explainerRow(title: "🏆 Summit / Leaderboard", cost: "25 Steps")
-                    explainerRow(title: "👥 Clubs", cost: "10 Steps")
-                    explainerRow(title: "🎓 Personal Grade", cost: "75 Steps")
-                    explainerRow(title: "📈 Official Leaderboard Ranks", cost: "250 Steps")
-                    explainerRow(title: "⭐ View User Instagram", cost: "25 Steps")
+                VStack(spacing: 12) {
+                    featureRow(id: "leaderboard", icon: "trophy.fill", title: "Summit", cost: 25)
+                    featureRow(id: "clubs", icon: "person.3.fill", title: "Clubs", cost: 10)
+                    featureRow(id: "grade", icon: "chart.bar.fill", title: "Personal Grade", cost: 75)
+                    featureRow(id: "ranks", icon: "list.number", title: "Official Ranks", cost: 250)
 
-                    Divider()
-                        .background(ClimbTheme.borderColor)
-
-                    Text("🎁 Save your Instagram handle on your Me tab to claim +50 FREE Steps!")
-                        .font(ClimbTheme.bodyFont(size: 12))
-                        .fontWeight(.bold)
-                        .foregroundColor(ClimbTheme.primaryColor)
+                    HStack {
+                        HStack(spacing: 8) {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(ClimbTheme.primaryColor)
+                            Text("View User Instagram")
+                                .font(ClimbTheme.bodyFont(size: 13))
+                                .fontWeight(.bold)
+                        }
+                        Spacer()
+                        Text("25 Steps / profile")
+                            .font(ClimbTheme.bodyFont(size: 12))
+                            .fontWeight(.bold)
+                            .foregroundColor(ClimbTheme.textMuted)
+                    }
                 }
                 .padding(16)
                 .background(ClimbTheme.bgSecondary)
@@ -531,16 +587,38 @@ struct StepsExplainerSheet: View {
         }
     }
 
-    private func explainerRow(title: String, cost: String) -> some View {
+    @ViewBuilder
+    private func featureRow(id: String, icon: String, title: String, cost: Int) -> some View {
+        let isUnlocked = appState.currentProfile?.isUnlocked(id) ?? false
         HStack {
-            Text(title)
-                .font(ClimbTheme.bodyFont(size: 13))
-                .fontWeight(.medium)
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 14))
+                    .foregroundColor(ClimbTheme.primaryColor)
+                Text(title)
+                    .font(ClimbTheme.bodyFont(size: 13))
+                    .fontWeight(.bold)
+            }
             Spacer()
-            Text(cost)
-                .font(ClimbTheme.bodyFont(size: 13))
-                .fontWeight(.bold)
-                .foregroundColor(ClimbTheme.primaryColor)
+            if isUnlocked {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("Unlocked")
+                        .font(ClimbTheme.bodyFont(size: 12))
+                        .fontWeight(.bold)
+                        .foregroundColor(.green)
+                }
+            } else {
+                Button(action: {
+                    Task { _ = await appState.unlockFeature(id: id, cost: cost) }
+                }) {
+                    Text("Unlock (\(cost))")
+                        .font(ClimbTheme.bodyFont(size: 12))
+                        .fontWeight(.bold)
+                }
+                .buttonStyle(BrutalistSmallButtonStyle())
+            }
         }
     }
 }

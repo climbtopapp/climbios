@@ -853,9 +853,10 @@ final class AppState: ObservableObject {
                     .value
                 return data
             } else {
+                guard let userId = currentUser?.id else { return [] }
                 let data: [LeaderboardRow] = try await supabase
                     .rpc("get_leaderboard_data", params: [
-                        "viewer_id": currentUser!.id.uuidString,
+                        "viewer_id": userId.uuidString,
                         "viewer_lat": String(userLatitude),
                         "viewer_lon": String(userLongitude),
                         "viewer_state": userState,
@@ -868,7 +869,6 @@ final class AppState: ObservableObject {
             }
         } catch {
             print("Failed to load leaderboard: \(error)")
-            showToastMessage("Failed to load rankings.", type: .error)
             return []
         }
     }

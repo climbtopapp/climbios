@@ -330,6 +330,7 @@ struct ProfileView: View {
 
     @ViewBuilder
     private func rankItem(icon: String, label: String, value: String) -> some View {
+        let isRanksUnlocked = appState.currentProfile?.isUnlocked("ranks") ?? false
         HStack {
             HStack(spacing: 6) {
                 Image(systemName: icon)
@@ -340,17 +341,27 @@ struct ProfileView: View {
                     .foregroundColor(ClimbTheme.textMuted)
             }
             Spacer()
-            Text(value)
-                .font(ClimbTheme.bodyFont(size: 14))
-                .fontWeight(.bold)
-                .foregroundColor(ClimbTheme.textMain)
+            if !isRanksUnlocked {
+                HStack(spacing: 4) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(ClimbTheme.accentColor)
+                    Text("250 Steps")
+                        .font(ClimbTheme.bodyFont(size: 14))
+                        .fontWeight(.bold)
+                        .foregroundColor(ClimbTheme.accentColor)
+                }
+            } else {
+                Text(value)
+                    .font(ClimbTheme.bodyFont(size: 14))
+                    .fontWeight(.bold)
+                    .foregroundColor(ClimbTheme.textMain)
+            }
         }
         .padding(.vertical, 4)
     }
 
     private var globalRankDisplay: String {
-        let isUnlocked = appState.currentProfile?.isUnlocked("ranks") ?? false
-        if !isUnlocked { return "🔒 250 Steps" }
         if let stats = rankStats, let r = stats.globalRank, let t = stats.totalGlobal, t > 0 {
             return "\(r) / \(t)"
         }
@@ -358,8 +369,6 @@ struct ProfileView: View {
     }
 
     private var stateRankDisplay: String {
-        let isUnlocked = appState.currentProfile?.isUnlocked("ranks") ?? false
-        if !isUnlocked { return "🔒 250 Steps" }
         if let stats = rankStats, let r = stats.stateRank, let t = stats.totalState, t > 0 {
             return "\(r) / \(t)"
         }
@@ -367,8 +376,6 @@ struct ProfileView: View {
     }
 
     private var clubRankDisplay: String {
-        let isUnlocked = appState.currentProfile?.isUnlocked("ranks") ?? false
-        if !isUnlocked { return "🔒 250 Steps" }
         guard appState.currentClubInfo != nil else { return "No Club" }
         if let myIndex = appState.currentClubMembers.firstIndex(where: { $0.userId == appState.currentUser?.id }) {
             return "\(myIndex + 1) / \(appState.currentClubMembers.count)"

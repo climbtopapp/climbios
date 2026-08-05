@@ -94,8 +94,8 @@ struct LeaderboardView: View {
                 }
             }
 
-            // Sticky user rank bar
-            if let profile = appState.currentProfile, !isLoading {
+            // Sticky user rank bar - ONLY display if user has unlocked ranks!
+            if let profile = appState.currentProfile, !isLoading, profile.isUnlocked("ranks") {
                 stickyUserRank(profile: profile)
             }
         }

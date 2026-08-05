@@ -42,7 +42,7 @@ struct MainTabView: View {
                 tabButton(
                     tab: .leaderboard,
                     icon: "trophy.fill",
-                    label: isSummitUnlocked ? "Summit" : "🔒 25 Steps",
+                    label: isSummitUnlocked ? "Summit" : "25 Steps",
                     locked: !isSummitUnlocked,
                     onTapLocked: {
                         let avail = appState.currentProfile?.availableSteps ?? 0
@@ -57,7 +57,7 @@ struct MainTabView: View {
                 tabButton(
                     tab: .clubs,
                     icon: "person.3.fill",
-                    label: isClubsUnlocked ? "Clubs" : "🔒 10 Steps",
+                    label: isClubsUnlocked ? "Clubs" : "10 Steps",
                     locked: !isClubsUnlocked,
                     onTapLocked: {
                         let avail = appState.currentProfile?.availableSteps ?? 0
@@ -80,27 +80,41 @@ struct MainTabView: View {
         }
         .background(ClimbTheme.bgPrimary)
         .ignoresSafeArea(.container, edges: .bottom)
-        .confirmationDialog("Unlock Summit", isPresented: $showSummitUnlockConfirm, titleVisibility: .visible) {
-            Button("Unlock Summit (25 Steps)") {
-                Task {
-                    let success = await appState.unlockFeature(id: "leaderboard", cost: 25)
-                    if success { appState.selectedTab = .leaderboard }
-                }
+        .overlay {
+            if showSummitUnlockConfirm {
+                BrutalistUnlockModal(
+                    title: "UNLOCK SUMMIT",
+                    message: "Unlock the Summit (Leaderboard) for 25 Steps?",
+                    cost: 25,
+                    availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    onUnlock: {
+                        showSummitUnlockConfirm = false
+                        Task {
+                            let success = await appState.unlockFeature(id: "leaderboard", cost: 25)
+                            if success { appState.selectedTab = .leaderboard }
+                        }
+                    },
+                    onCancel: { showSummitUnlockConfirm = false }
+                )
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Unlock the Summit (Leaderboard) for 25 Steps?\n(Your Steps: \(appState.currentProfile?.availableSteps ?? 0))")
         }
-        .confirmationDialog("Unlock Clubs", isPresented: $showClubsUnlockConfirm, titleVisibility: .visible) {
-            Button("Unlock Clubs (10 Steps)") {
-                Task {
-                    let success = await appState.unlockFeature(id: "clubs", cost: 10)
-                    if success { appState.selectedTab = .clubs }
-                }
+        .overlay {
+            if showClubsUnlockConfirm {
+                BrutalistUnlockModal(
+                    title: "UNLOCK CLUBS",
+                    message: "Unlock Clubs for 10 Steps?",
+                    cost: 10,
+                    availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    onUnlock: {
+                        showClubsUnlockConfirm = false
+                        Task {
+                            let success = await appState.unlockFeature(id: "clubs", cost: 10)
+                            if success { appState.selectedTab = .clubs }
+                        }
+                    },
+                    onCancel: { showClubsUnlockConfirm = false }
+                )
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Unlock Clubs for 10 Steps?\n(Your Steps: \(appState.currentProfile?.availableSteps ?? 0))")
         }
         .task {
             await appState.loadNextMatchup()
@@ -123,10 +137,22 @@ struct MainTabView: View {
                     .scaleEffect(appState.selectedTab == tab ? 1.1 : 1.0)
                     .foregroundColor(appState.selectedTab == tab ? ClimbTheme.primaryColor : ClimbTheme.textMuted)
 
-                Text(label)
-                    .font(ClimbTheme.bodyFont(size: 11))
-                    .fontWeight(.bold)
-                    .foregroundColor(appState.selectedTab == tab ? ClimbTheme.accentColor : ClimbTheme.textMuted)
+                if locked {
+                    HStack(spacing: 2) {
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(ClimbTheme.textMuted)
+                        Text(label)
+                            .font(ClimbTheme.bodyFont(size: 11))
+                            .fontWeight(.bold)
+                            .foregroundColor(ClimbTheme.textMuted)
+                    }
+                } else {
+                    Text(label)
+                        .font(ClimbTheme.bodyFont(size: 11))
+                        .fontWeight(.bold)
+                        .foregroundColor(appState.selectedTab == tab ? ClimbTheme.accentColor : ClimbTheme.textMuted)
+                }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
