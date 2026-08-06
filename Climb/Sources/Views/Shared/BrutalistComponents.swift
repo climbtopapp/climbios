@@ -434,3 +434,60 @@ struct BrutalistInfoModal: View {
         }
     }
 }
+
+/// Custom In-App Brutalist Instagram View Confirmation Modal
+struct BrutalistIgViewModal: View {
+    let handle: String
+    let onOpen: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.6)
+                .ignoresSafeArea()
+                .onTapGesture { onDismiss() }
+
+            VStack(spacing: 16) {
+                Image(systemName: "star.fill")
+                    .font(.system(size: 36))
+                    .foregroundColor(ClimbTheme.primaryColor)
+
+                Text("INSTAGRAM UNLOCKED")
+                    .font(ClimbTheme.displayFont(size: 20))
+                    .foregroundColor(ClimbTheme.primaryColor)
+                    .multilineTextAlignment(.center)
+
+                Text("@\(handle.replacingOccurrences(of: "@", with: ""))")
+                    .font(ClimbTheme.displayFont(size: 18))
+                    .foregroundColor(ClimbTheme.textMain)
+
+                Text("Would you like to open their Instagram profile now?")
+                    .font(ClimbTheme.bodyFont(size: 14))
+                    .foregroundColor(ClimbTheme.textMuted)
+                    .multilineTextAlignment(.center)
+
+                HStack(spacing: 12) {
+                    Button(action: onDismiss) {
+                        Text("Done")
+                            .font(ClimbTheme.bodyFont(size: 14))
+                    }
+                    .buttonStyle(BrutalistSecondaryButtonStyle(isFullWidth: true))
+
+                    Button(action: onOpen) {
+                        Text("Open Instagram")
+                            .font(ClimbTheme.bodyFont(size: 14))
+                    }
+                    .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: true))
+                }
+                .padding(.top, 4)
+            }
+            .padding(24)
+            .background(ClimbTheme.bgSecondary)
+            .overlay(
+                Rectangle()
+                    .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+            )
+            .padding(.horizontal, 32)
+        }
+    }
+}

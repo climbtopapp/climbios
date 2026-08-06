@@ -23,6 +23,8 @@ struct MashView: View {
     @State private var showStepsExplainer = false
     @State private var showIgUnlockModal = false
     @State private var showNoIgModal = false
+    @State private var showIgViewModal = false
+    @State private var igViewHandle = ""
     @State private var igUnlockTarget: MatchupProfile?
 
     var body: some View {
@@ -252,20 +254,37 @@ struct MashView: View {
                 let clean = rawHandle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
                 BrutalistUnlockModal(
                     title: "UNLOCK INSTAGRAM",
-                    message: "Unlock @\(clean)'s Instagram profile for 25 Steps?",
+                    message: "Unlock this user's Instagram profile for 25 Steps?",
                     cost: 25,
                     availableSteps: appState.currentProfile?.availableSteps ?? 0,
                     onUnlock: {
                         showIgUnlockModal = false
                         Task {
                             let success = await appState.unlockInstagram(targetUserId: target.id, cost: 25)
-                            if success, let url = URL(string: "https://instagram.com/\(clean)") {
-                                await UIApplication.shared.open(url)
+                            if success {
+                                igViewHandle = clean
+                                showIgViewModal = true
                             }
                         }
                     },
                     onCancel: {
                         showIgUnlockModal = false
+                    }
+                )
+            }
+        }
+        .overlay {
+            if showIgViewModal {
+                BrutalistIgViewModal(
+                    handle: igViewHandle,
+                    onOpen: {
+                        showIgViewModal = false
+                        if let url = URL(string: "https://instagram.com/\(igViewHandle)") {
+                            Task { @MainActor in await UIApplication.shared.open(url) }
+                        }
+                    },
+                    onDismiss: {
+                        showIgViewModal = false
                     }
                 )
             }
@@ -461,9 +480,8 @@ struct MashView: View {
         
         let isUnlocked = appState.currentProfile?.isInstagramUnlocked(profile.id) ?? false
         if isUnlocked {
-            if let url = URL(string: "https://instagram.com/\(clean)") {
-                Task { @MainActor in await UIApplication.shared.open(url) }
-            }
+            igViewHandle = clean
+            showIgViewModal = true
             return
         }
 

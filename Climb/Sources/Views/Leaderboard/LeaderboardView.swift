@@ -12,6 +12,8 @@ struct LeaderboardView: View {
     @State private var isLoading = true
     @State private var showNoIgModal = false
     @State private var showIgUnlockModal = false
+    @State private var showIgViewModal = false
+    @State private var igViewHandle = ""
     @State private var targetIgUser: LeaderboardRow?
 
     private let genderOptions: [(label: String, value: String)] = [
@@ -44,36 +46,42 @@ struct LeaderboardView: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 8)
 
-            // Gender filter
-            GenderFilterTabs(
-                options: genderOptions,
-                selected: $selectedGender
-            )
-            .padding(.bottom, 16)
+            // Gender Filter Pills
+            HStack(spacing: 8) {
+                ForEach(genderOptions, id: \.value) { opt in
+                    Button(action: {
+                        selectedGender = opt.value
+                    }) {
+                        Text(opt.label)
+                            .font(ClimbTheme.bodyFont(size: 13))
+                            .fontWeight(.bold)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 6)
+                            .background(selectedGender == opt.value ? ClimbTheme.primaryColor : ClimbTheme.bgSecondary)
+                            .foregroundColor(ClimbTheme.textMain)
+                            .overlay(
+                                Rectangle()
+                                    .stroke(ClimbTheme.borderColor, lineWidth: 2)
+                            )
+                    }
+                }
+            }
+            .padding(.bottom, 12)
 
-            // Leaderboard list
+            // List
             if isLoading {
-                VStack(spacing: 12) {
-                    Spacer()
-                    ProgressView()
-                    Text("Rebuilding rankings...")
-                        .font(ClimbTheme.bodyFont(size: 14))
-                        .foregroundColor(ClimbTheme.textMuted)
-                    Spacer()
-                }
+                Spacer()
+                ProgressView()
+                Spacer()
             } else if leaderboardData.isEmpty {
-                VStack {
-                    Spacer()
-                    Text("No ranking records found for this category yet.")
-                        .font(ClimbTheme.bodyFont(size: 14))
-                        .foregroundColor(ClimbTheme.textMuted)
-                        .multilineTextAlignment(.center)
-                        .padding(40)
-                    Spacer()
-                }
+                Spacer()
+                Text("No ranked users yet.")
+                    .font(ClimbTheme.bodyFont(size: 16))
+                    .foregroundColor(ClimbTheme.textMuted)
+                Spacer()
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 12) {
+                    LazyVStack(spacing: 8) {
                         ForEach(Array(leaderboardData.enumerated()), id: \.element.id) { index, row in
                             let isSelf = row.userId == appState.currentUser?.id
                             let votes = appState.currentProfile?.votesCast ?? 0
@@ -86,11 +94,12 @@ struct LeaderboardView: View {
                                 avatarUrl: row.avatarUrl,
                                 rankIndex: index,
                                 instagramHandle: row.instagramHandle,
-                                onStarTap: isSelf ? nil : { handleStarTap(row: row) }
+                                onStarTap: isSelf ? nil : { handleIgClick(row: row) }
                             )
                         }
                     }
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 16)
                 }
             }
 
@@ -106,19 +115,34 @@ struct LeaderboardView: View {
                 let clean = rawHandle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
                 BrutalistUnlockModal(
                     title: "UNLOCK INSTAGRAM",
-                    message: "Unlock @\(clean)'s Instagram profile for 25 Steps?",
+                    message: "Unlock this user's Instagram profile for 25 Steps?",
                     cost: 25,
                     availableSteps: appState.currentProfile?.availableSteps ?? 0,
                     onUnlock: {
                         showIgUnlockModal = false
                         Task {
                             let success = await appState.unlockInstagram(targetUserId: target.userId, cost: 25)
-                            if success, let url = URL(string: "https://instagram.com/\(clean)") {
-                                await UIApplication.shared.open(url)
+                            if success {
+                                igViewHandle = clean
+                                showIgViewModal = true
                             }
                         }
                     },
                     onCancel: { showIgUnlockModal = false }
+                )
+            }
+        }
+        .overlay {
+            if showIgViewModal {
+                BrutalistIgViewModal(
+                    handle: igViewHandle,
+                    onOpen: {
+                        showIgViewModal = false
+                        if let url = URL(string: "https://instagram.com/\(igViewHandle)") {
+                            Task { @MainActor in await UIApplication.shared.open(url) }
+                        }
+                    },
+                    onDismiss: { showIgViewModal = false }
                 )
             }
         }
@@ -138,13 +162,14 @@ struct LeaderboardView: View {
     }
 
     private func getRowRankDisplay(isSelf: Bool, votes: Int, index: Int, relativeRank: Int?) -> String {
-        if isSelf && votes < 500 { return "--" }
-        if tabType == .club { return "\(index + 1)" }
-        if let rel = relativeRank { return "\(rel)" }
+        if isSelf {
+            if votes < 500 { return "--" }
+            return relativeRank.map { "\($0)" } ?? "\(index + 1)"
+        }
         return "\(index + 1)"
     }
 
-    private func handleStarTap(row: LeaderboardRow) {
+    private func handleIgClick(row: LeaderboardRow) {
         guard let rawHandle = row.instagramHandle, !rawHandle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             showNoIgModal = true
             return
@@ -153,9 +178,8 @@ struct LeaderboardView: View {
         let clean = rawHandle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
         let isUnlocked = appState.currentProfile?.isInstagramUnlocked(row.userId) ?? false
         if isUnlocked {
-            if let url = URL(string: "https://instagram.com/\(clean)") {
-                Task { @MainActor in await UIApplication.shared.open(url) }
-            }
+            igViewHandle = clean
+            showIgViewModal = true
             return
         }
 
