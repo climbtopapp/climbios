@@ -24,6 +24,7 @@ struct MashView: View {
     @State private var showIgUnlockModal = false
     @State private var showNoIgModal = false
     @State private var showIgViewModal = false
+    @State private var showClubsUnlockConfirm = false
     @State private var igViewHandle = ""
     @State private var igUnlockTarget: MatchupProfile?
 
@@ -60,8 +61,12 @@ struct MashView: View {
                     Button(action: {
                         let isClubsUnlocked = appState.currentProfile?.isUnlocked("clubs") ?? false
                         if !isClubsUnlocked {
-                            appState.showToastMessage("Unlock Clubs for 10 Steps first.", type: .error)
-                            appState.selectedTab = .clubs
+                            let avail = appState.currentProfile?.availableSteps ?? 0
+                            if avail < 10 {
+                                appState.showToastMessage("Need 10 Steps to unlock Clubs. (You have \(avail) Steps)", type: .error)
+                            } else {
+                                showClubsUnlockConfirm = true
+                            }
                             return
                         }
                         if appState.currentClubInfo == nil {
@@ -296,6 +301,26 @@ struct MashView: View {
                     message: "This user has not added an Instagram handle to their profile yet.",
                     iconName: "star.fill",
                     onDismiss: { showNoIgModal = false }
+                )
+            }
+        }
+        .overlay {
+            if showClubsUnlockConfirm {
+                BrutalistUnlockModal(
+                    title: "UNLOCK CLUBS",
+                    message: "Unlock Clubs for 10 Steps?",
+                    cost: 10,
+                    availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    onUnlock: {
+                        showClubsUnlockConfirm = false
+                        Task {
+                            let success = await appState.unlockFeature(id: "clubs", cost: 10)
+                            if success && appState.currentClubInfo == nil {
+                                appState.selectedTab = .clubs
+                            }
+                        }
+                    },
+                    onCancel: { showClubsUnlockConfirm = false }
                 )
             }
         }

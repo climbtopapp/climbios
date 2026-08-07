@@ -12,6 +12,11 @@ struct ClubsView: View {
     @State private var isEditingName = false
     @State private var editedName = ""
     @State private var showLeaveConfirm = false
+    @State private var showUnlockModal = false
+
+    private var isClubsUnlocked: Bool {
+        appState.currentProfile?.isUnlocked("clubs") ?? false
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,7 +34,9 @@ struct ClubsView: View {
             .padding(.top, 16)
             .padding(.bottom, 16)
 
-            if appState.currentClubInfo != nil {
+            if !isClubsUnlocked {
+                lockedClubView
+            } else if appState.currentClubInfo != nil {
                 hasClubView
             } else {
                 noClubView
@@ -37,7 +44,69 @@ struct ClubsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(ClimbTheme.bgPrimary)
-        .task { await appState.fetchClubInfo() }
+        .task {
+            if isClubsUnlocked {
+                await appState.fetchClubInfo()
+            }
+        }
+    }
+
+    // MARK: - Locked View
+
+    private var lockedClubView: some View {
+        VStack(spacing: 20) {
+            Spacer()
+
+            Image(systemName: "lock.fill")
+                .font(.system(size: 48))
+                .foregroundColor(ClimbTheme.accentColor)
+
+            Text("CLUBS LOCKED")
+                .font(ClimbTheme.displayFont(size: 24))
+                .foregroundColor(ClimbTheme.textMain)
+
+            Text("Unlock Clubs for 10 Steps to join or create clubs and climb with your friends.")
+                .font(ClimbTheme.bodyFont(size: 14))
+                .foregroundColor(ClimbTheme.textMuted)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+
+            Button(action: {
+                let avail = appState.currentProfile?.availableSteps ?? 0
+                if avail < 10 {
+                    appState.showToastMessage("Need 10 Steps to unlock Clubs. (You have \(avail) Steps)", type: .error)
+                } else {
+                    showUnlockModal = true
+                }
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 14))
+                    Text("UNLOCK CLUBS (10 STEPS)")
+                }
+            }
+            .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: false))
+            .padding(.horizontal, 32)
+
+            Spacer()
+        }
+        .overlay {
+            if showUnlockModal {
+                BrutalistUnlockModal(
+                    title: "UNLOCK CLUBS",
+                    message: "Unlock Clubs for 10 Steps?",
+                    cost: 10,
+                    availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    onUnlock: {
+                        showUnlockModal = false
+                        Task {
+                            _ = await appState.unlockFeature(id: "clubs", cost: 10)
+                        }
+                    },
+                    onCancel: { showUnlockModal = false }
+                )
+            }
+        }
     }
 
     // MARK: - No Club View
