@@ -36,7 +36,7 @@ struct RetroIcon {
         }
     }
 
-    /// Star / Challenges icon
+    /// Star icon
     struct StarIcon: View {
         var size: CGFloat = 20
         var body: some View {

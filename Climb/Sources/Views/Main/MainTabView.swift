@@ -25,8 +25,6 @@ struct MainTabView: View {
                     MashView()
                 case .leaderboard:
                     LeaderboardView()
-                case .challenges:
-                    ChallengesView()
                 case .clubs:
                     ClubsView()
                 case .profile:
@@ -53,7 +51,6 @@ struct MainTabView: View {
                         }
                     }
                 )
-                tabButton(tab: .challenges, icon: "sparkles", label: "Challenges")
                 tabButton(
                     tab: .clubs,
                     icon: "person.3.fill",

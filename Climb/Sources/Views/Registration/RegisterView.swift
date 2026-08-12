@@ -27,7 +27,9 @@ struct RegisterView: View {
         ZStack {
             ClimbTheme.bgPrimary.ignoresSafeArea()
 
-            ScrollView {
+            VStack {
+                Spacer()
+
                 VStack {
                     switch currentStep {
                     case .name:
@@ -43,8 +45,10 @@ struct RegisterView: View {
                     }
                 }
                 .brutalistCard(padding: 24)
-                .padding(24)
+
+                Spacer()
             }
+            .padding(24)
         }
         .sheet(isPresented: $showCropper) {
             if let img = rawImage {

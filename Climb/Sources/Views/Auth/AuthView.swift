@@ -23,33 +23,34 @@ struct AuthView: View {
             ClimbTheme.bgPrimary.ignoresSafeArea()
 
             VStack {
-                // Header
-                VStack(spacing: 4) {
-                    Text("CLIMB")
-                        .font(ClimbTheme.logoFont(size: 72))
-                        .foregroundColor(ClimbTheme.primaryColor)
-                        .shadow(color: .black, radius: 0, x: 4, y: 4)
-
-                    Text("Step up and make your way to the top.")
-                        .font(ClimbTheme.bodyFont(size: 15))
-                        .foregroundColor(ClimbTheme.textMuted)
-                }
-                .padding(.top, 40)
-
                 Spacer()
 
-                switch step {
-                case .welcome:
-                    welcomeStep
-                case .email:
-                    emailStep
-                case .otp:
-                    otpStep
+                VStack(spacing: 20) {
+                    // Header
+                    VStack(spacing: 4) {
+                        Text("CLIMB")
+                            .font(ClimbTheme.logoFont(size: 64))
+                            .foregroundColor(ClimbTheme.primaryColor)
+                            .shadow(color: .black, radius: 0, x: 4, y: 4)
+
+                        Text("Step up and make your way to the top.")
+                            .font(ClimbTheme.bodyFont(size: 14))
+                            .foregroundColor(ClimbTheme.textMuted)
+                    }
+
+                    switch step {
+                    case .welcome:
+                        welcomeStep
+                    case .email:
+                        emailStep
+                    case .otp:
+                        otpStep
+                    }
                 }
+                .brutalistCard(padding: 24)
 
                 Spacer()
             }
-            .brutalistCard(padding: 24)
             .padding(24)
         }
     }

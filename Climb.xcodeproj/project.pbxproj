@@ -12,7 +12,6 @@
 		1E9E6E5AEDDE94A18E7E269F /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65024901C59C2F68BBEAF969 /* MainTabView.swift */; };
 		24BB2AE4FCA3BCAE2C5015EB /* CityPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CC57BB4689DB109B90416F /* CityPickerView.swift */; };
 		3FABE01C11377D0040E06BE0 /* SupabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 025D48A708EE064F58306D2B /* SupabaseManager.swift */; };
-		445FCAC873E82F464CB91A48 /* ChallengesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F3A107C4989C7EC73946F4 /* ChallengesView.swift */; };
 		45E396EB83455A4AA9E20326 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FCDD58EA8F811CBF4C58E282 /* Assets.xcassets */; };
 		49E43B804B94EEFBA5BC92F3 /* EloGrade.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD0C0FDCD546578B76703841 /* EloGrade.swift */; };
 		4A45710EC804DADE75098A79 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC444458CE4FD78EE97C4EB9 /* AppState.swift */; };
@@ -55,7 +54,6 @@
 		8C1ACC587FA767B98316F69A /* VT323-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "VT323-Regular.ttf"; sourceTree = "<group>"; };
 		9980B35ADAA6934118D80818 /* Sen-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sen-Bold.ttf"; sourceTree = "<group>"; };
 		9A0C875AF573F67457B2AB78 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
-		A1F3A107C4989C7EC73946F4 /* ChallengesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengesView.swift; sourceTree = "<group>"; };
 		AB66D896F67FAE98B861B1E4 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		AD0C0FDCD546578B76703841 /* EloGrade.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EloGrade.swift; sourceTree = "<group>"; };
 		AEBD678616EE9992E87BE53A /* MashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MashView.swift; sourceTree = "<group>"; };
@@ -108,14 +106,6 @@
 				65024901C59C2F68BBEAF969 /* MainTabView.swift */,
 			);
 			path = Main;
-			sourceTree = "<group>";
-		};
-		4951D9906F9D05BFD1F23934 /* Challenges */ = {
-			isa = PBXGroup;
-			children = (
-				A1F3A107C4989C7EC73946F4 /* ChallengesView.swift */,
-			);
-			path = Challenges;
 			sourceTree = "<group>";
 		};
 		4D273BB93668576EF04B80AF /* Fonts */ = {
@@ -228,7 +218,6 @@
 			isa = PBXGroup;
 			children = (
 				B8B4F40AC1865799394C1EAE /* Auth */,
-				4951D9906F9D05BFD1F23934 /* Challenges */,
 				9FDF2441D11EA3F988CFF5E6 /* Clubs */,
 				FD47FAFB2F8A58F4FA0B7598 /* Leaderboard */,
 				4543A5C48524F9C6DE31B072 /* Main */,
@@ -346,7 +335,6 @@
 				4A45710EC804DADE75098A79 /* AppState.swift in Sources */,
 				50A42777067511366D7ECAB6 /* AuthView.swift in Sources */,
 				CB1EECFB77E356EC0347740D /* BrutalistComponents.swift in Sources */,
-				445FCAC873E82F464CB91A48 /* ChallengesView.swift in Sources */,
 				571A0CB59DFE066942469B58 /* Cities.swift in Sources */,
 				24BB2AE4FCA3BCAE2C5015EB /* CityPickerView.swift in Sources */,
 				4AC97046BC0C2E81DB8106D8 /* ClimbApp.swift in Sources */,

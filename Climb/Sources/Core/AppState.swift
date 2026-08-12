@@ -309,7 +309,7 @@ final class AppState: ObservableObject {
     private let supabase = SupabaseManager.shared.client
 
     enum AppTab: String, CaseIterable {
-        case mash, leaderboard, challenges, clubs, profile
+        case mash, leaderboard, clubs, profile
     }
 
     enum LeaderboardTab: String {
