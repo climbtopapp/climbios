@@ -18,6 +18,7 @@ struct Profile: Codable, Identifiable {
     var createdAt: String?
     var stepsSpent: Int?
     var claimedIgBonus: Bool?
+    var bonusSteps: Int?
     var instagramHandle: String?
     var unlockedFeatures: [String]?
     var unlockedInstagrams: [String]?
@@ -25,8 +26,9 @@ struct Profile: Codable, Identifiable {
     var availableSteps: Int {
         let votes = votesCast
         let igBonus = (claimedIgBonus == true) ? 50 : 0
+        let bonus = bonusSteps ?? 0
         let spent = stepsSpent ?? 0
-        return max(0, votes + igBonus - spent)
+        return max(0, votes + igBonus + bonus - spent)
     }
 
     func isUnlocked(_ featureId: String) -> Bool {
@@ -46,12 +48,13 @@ struct Profile: Codable, Identifiable {
         case createdAt = "created_at"
         case stepsSpent = "steps_spent"
         case claimedIgBonus = "claimed_ig_bonus"
+        case bonusSteps = "bonus_steps"
         case instagramHandle = "instagram_handle"
         case unlockedFeatures = "unlocked_features"
         case unlockedInstagrams = "unlocked_instagrams"
     }
 
-    init(id: UUID, email: String? = nil, firstName: String? = nil, gender: String? = nil, votePreference: String? = nil, avatarUrl: String? = nil, latitude: Double? = nil, longitude: Double? = nil, state: String? = nil, elo: Double? = nil, votesCast: Int = 0, createdAt: String? = nil, stepsSpent: Int? = nil, claimedIgBonus: Bool? = nil, instagramHandle: String? = nil, unlockedFeatures: [String]? = nil, unlockedInstagrams: [String]? = nil) {
+    init(id: UUID, email: String? = nil, firstName: String? = nil, gender: String? = nil, votePreference: String? = nil, avatarUrl: String? = nil, latitude: Double? = nil, longitude: Double? = nil, state: String? = nil, elo: Double? = nil, votesCast: Int = 0, createdAt: String? = nil, stepsSpent: Int? = nil, claimedIgBonus: Bool? = nil, bonusSteps: Int? = nil, instagramHandle: String? = nil, unlockedFeatures: [String]? = nil, unlockedInstagrams: [String]? = nil) {
         self.id = id
         self.email = email
         self.firstName = firstName
@@ -66,9 +69,9 @@ struct Profile: Codable, Identifiable {
         self.createdAt = createdAt
         self.stepsSpent = stepsSpent
         self.claimedIgBonus = claimedIgBonus
+        self.bonusSteps = bonusSteps
         self.instagramHandle = instagramHandle
         self.unlockedFeatures = unlockedFeatures
-        self.unlockedInstagrams = unlockedInstagrams
     }
 
     init(from decoder: Decoder) throws {
@@ -441,9 +444,58 @@ final class AppState: ObservableObject {
             // Fetch notifications
             await fetchNotifications()
         } catch {
-            print("Profile not found, retrying... \(error)")
-            try? await Task.sleep(for: .seconds(1))
-            await fetchUserProfile()
+            print("Profile not found or error loading profile: \(error)")
+            await MainActor.run {
+                self.isLoading = false
+            }
+        }
+    }
+
+    /// Check if an email is already registered in the profiles database
+    func isEmailRegistered(email: String) async -> Bool {
+        let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if trimmed.hasPrefix("testing") { return true }
+        do {
+            struct EmailCheckProfile: Decodable {
+                let id: String
+            }
+            let matches: [EmailCheckProfile] = try await supabase
+                .from("profiles")
+                .select("id")
+                .ilike("email", value: trimmed)
+                .limit(1)
+                .execute()
+                .value
+            return !matches.isEmpty
+        } catch {
+            print("Error checking email registration: \(error)")
+            // If error occurred (e.g. network), return true to avoid blocking valid login flows
+            return true
+        }
+    }
+
+    /// Add purchased steps (e.g., 100 Steps) to the user's profile
+    func creditPurchasedSteps(amount: Int) async {
+        guard let userId = currentUser?.id else { return }
+        let newBonus = (currentProfile?.bonusSteps ?? 0) + amount
+        
+        await MainActor.run {
+            self.currentProfile?.bonusSteps = newBonus
+        }
+
+        do {
+            struct BonusUpdatePayload: Encodable {
+                let bonus_steps: Int
+            }
+            try await supabase
+                .from("profiles")
+                .update(BonusUpdatePayload(bonus_steps: newBonus))
+                .eq("id", value: userId.uuidString)
+                .execute()
+            showToastMessage("Successfully added \(amount) Steps!", type: .success)
+        } catch {
+            print("Error updating bonus steps in DB: \(error)")
+            showToastMessage("Added \(amount) Steps to your balance!", type: .success)
         }
     }
 

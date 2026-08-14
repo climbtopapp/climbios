@@ -104,6 +104,14 @@ struct RegisterView: View {
                 randomizeRotations()
             }
             .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: true))
+
+            Button("Log Out") {
+                Task {
+                    await appState.signOut()
+                }
+            }
+            .buttonStyle(BrutalistTextButtonStyle())
+            .padding(.top, 4)
         }
     }
 

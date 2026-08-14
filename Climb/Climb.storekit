@@ -16,6 +16,21 @@
       "productID" : "grade",
       "referenceName" : "Personal Grade",
       "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6801378143",
+      "localizations" : [
+        {
+          "description" : "Get 100 Steps to unlock features and view profiles.",
+          "displayName" : "100 Steps",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "100",
+      "referenceName" : "100 Steps",
+      "type" : "Consumable"
     }
   ],
   "settings" : {

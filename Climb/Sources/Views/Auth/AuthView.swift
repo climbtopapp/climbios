@@ -25,29 +25,46 @@ struct AuthView: View {
             VStack {
                 Spacer()
 
-                VStack(spacing: 20) {
-                    // Header
-                    VStack(spacing: 4) {
-                        Text("CLIMB")
-                            .font(ClimbTheme.logoFont(size: 64))
-                            .foregroundColor(ClimbTheme.primaryColor)
-                            .shadow(color: .black, radius: 0, x: 4, y: 4)
+                ZStack(alignment: .topTrailing) {
+                    VStack(spacing: 20) {
+                        // Header
+                        VStack(spacing: 4) {
+                            Text("CLIMB")
+                                .font(ClimbTheme.logoFont(size: 64))
+                                .foregroundColor(ClimbTheme.primaryColor)
+                                .shadow(color: .black, radius: 0, x: 4, y: 4)
 
-                        Text("Step up and make your way to the top.")
-                            .font(ClimbTheme.bodyFont(size: 14))
+                            Text("Step up and make your way to the top.")
+                                .font(ClimbTheme.bodyFont(size: 14))
+                                .foregroundColor(ClimbTheme.textMuted)
+                        }
+
+                        switch step {
+                        case .welcome:
+                            welcomeStep
+                        case .email:
+                            emailStep
+                        case .otp:
+                            otpStep
+                        }
+                    }
+                    .padding(24)
+
+                    // Exit / Close button in top right
+                    Button(action: { dismiss() }) {
+                        Text("✕")
+                            .font(.system(size: 18, weight: .bold))
                             .foregroundColor(ClimbTheme.textMuted)
+                            .frame(width: 32, height: 32)
+                            .background(ClimbTheme.bgPrimary)
+                            .overlay(
+                                Rectangle()
+                                    .stroke(ClimbTheme.borderColor, lineWidth: 2)
+                            )
                     }
-
-                    switch step {
-                    case .welcome:
-                        welcomeStep
-                    case .email:
-                        emailStep
-                    case .otp:
-                        otpStep
-                    }
+                    .padding(12)
                 }
-                .brutalistCard(padding: 24)
+                .brutalistCard(padding: 0)
 
                 Spacer()
             }
@@ -127,7 +144,7 @@ struct AuthView: View {
                 label: isSignUp ? "Create Account Email" : "Email Address",
                 text: $email,
                 placeholder: "you@example.com",
-                hint: "Enter your email to receive a secure link.",
+                hint: isSignUp ? "Enter your email to create a new account." : "Enter your email to log into your account.",
                 keyboardType: .emailAddress,
                 autocapitalization: .never
             )
@@ -198,6 +215,21 @@ struct AuthView: View {
             return
         }
 
+        // Check account existence for Log In vs Sign Up
+        let isRegistered = await appState.isEmailRegistered(email: trimmedEmail)
+
+        if !isSignUp && !isRegistered {
+            // User pressed Log In but no account exists with this email
+            appState.showToastMessage("No account found for this email. Please Sign Up to create an account.", type: .error)
+            isLoading = false
+            return
+        }
+
+        if isSignUp && isRegistered {
+            // User pressed Sign Up but already has an account
+            appState.showToastMessage("Account found! Sending login code...", type: .info)
+        }
+
         do {
             try await appState.sendMagicLink(email: trimmedEmail)
             appState.showToastMessage("Verification code sent to your email!", type: .success)
@@ -230,6 +262,7 @@ struct AuthView: View {
         do {
             try await appState.verifyOTP(email: trimmedEmail, token: trimmedCode)
             appState.showToastMessage("Successfully authenticated!", type: .success)
+            dismiss()
         } catch {
             appState.showToastMessage(error.localizedDescription, type: .error)
         }

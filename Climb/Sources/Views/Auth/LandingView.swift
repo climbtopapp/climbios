@@ -8,8 +8,24 @@ struct LandingView: View {
     @State private var showSafety = false
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .topLeading) {
             ClimbTheme.bgPrimary.ignoresSafeArea()
+
+            // Safety Info Button in top left
+            Button(action: { showSafety = true }) {
+                Text("?")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(ClimbTheme.textMuted)
+                    .frame(width: 36, height: 36)
+                    .background(ClimbTheme.bgSecondary)
+                    .overlay(
+                        Rectangle()
+                            .stroke(ClimbTheme.borderColor, lineWidth: 2)
+                    )
+            }
+            .padding(.top, 50)
+            .padding(.leading, 24)
+            .zIndex(10)
 
             VStack {
                 Spacer()
@@ -45,6 +61,9 @@ struct LandingView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(ClimbTheme.bgPrimary)
+        .sheet(isPresented: $showSafety) {
+            SafetyInfoView()
+        }
         .fullScreenCover(isPresented: $showAuth) {
             AuthView()
                 .environmentObject(appState)

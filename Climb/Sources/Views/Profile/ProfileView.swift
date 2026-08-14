@@ -141,6 +141,29 @@ struct ProfileView: View {
                 }
                 .buttonStyle(.plain)
             }
+            .padding(.bottom, 12)
+
+            // Purchase 100 Steps Button
+            Button(action: {
+                Task {
+                    let success = await storeKit.purchase100Steps()
+                    if success {
+                        await appState.creditPurchasedSteps(amount: 100)
+                    }
+                }
+            }) {
+                HStack(spacing: 8) {
+                    if storeKit.isPurchasingSteps {
+                        ProgressView().tint(.black)
+                    } else {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 14))
+                        Text("Purchase 100 Steps ($0.99)")
+                    }
+                }
+            }
+            .buttonStyle(BrutalistSecondaryButtonStyle(isFullWidth: true))
+            .disabled(storeKit.isPurchasingSteps)
             .padding(.bottom, 24)
 
             // Rankings section
@@ -420,7 +443,23 @@ struct PersonalGradePurchaseSheet: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Spacer().frame(height: 10)
+            // Top close bar
+            HStack {
+                Spacer()
+                Button(action: { dismiss() }) {
+                    Text("✕")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(ClimbTheme.textMuted)
+                        .frame(width: 32, height: 32)
+                        .background(ClimbTheme.bgSecondary)
+                        .overlay(
+                            Rectangle()
+                                .stroke(ClimbTheme.borderColor, lineWidth: 2)
+                        )
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
 
             // Header Icon Box
             Image(systemName: "lock.fill")

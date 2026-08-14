@@ -561,6 +561,7 @@ struct MashView: View {
 
 struct StepsExplainerSheet: View {
     @EnvironmentObject var appState: AppState
+    @StateObject private var storeKit = StoreKitManager.shared
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -612,10 +613,33 @@ struct StepsExplainerSheet: View {
 
                 Spacer()
 
-                Button(action: { dismiss() }) {
-                    Text("Got It!")
+                // Purchase 100 Steps Button
+                Button(action: {
+                    Task {
+                        let success = await storeKit.purchase100Steps()
+                        if success {
+                            await appState.creditPurchasedSteps(amount: 100)
+                        }
+                    }
+                }) {
+                    HStack(spacing: 8) {
+                        if storeKit.isPurchasingSteps {
+                            ProgressView().tint(.black)
+                        } else {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 14))
+                            Text("Purchase 100 Steps ($0.99)")
+                        }
+                    }
                 }
                 .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: true))
+                .disabled(storeKit.isPurchasingSteps)
+                .padding(.horizontal, 24)
+
+                Button(action: { dismiss() }) {
+                    Text("Close")
+                }
+                .buttonStyle(BrutalistSecondaryButtonStyle())
                 .padding(.horizontal, 24)
                 .padding(.bottom, 20)
             }
