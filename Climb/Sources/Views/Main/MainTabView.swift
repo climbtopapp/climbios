@@ -45,7 +45,7 @@ struct MainTabView: View {
                     onTapLocked: {
                         let avail = appState.currentProfile?.availableSteps ?? 0
                         if avail < 25 {
-                            appState.showToastMessage("Need 25 Steps to unlock Summit. (You have \(avail) Steps)", type: .error)
+                            appState.showToastMessage("Not enough Steps! You need 25 Steps to unlock Summit (you have \(avail) Steps). Cast more votes or purchase Steps to unlock!", type: .error)
                         } else {
                             showSummitUnlockConfirm = true
                         }
@@ -59,7 +59,7 @@ struct MainTabView: View {
                     onTapLocked: {
                         let avail = appState.currentProfile?.availableSteps ?? 0
                         if avail < 10 {
-                            appState.showToastMessage("Need 10 Steps to unlock Clubs. (You have \(avail) Steps)", type: .error)
+                            appState.showToastMessage("Not enough Steps! You need 10 Steps to unlock Clubs (you have \(avail) Steps). Cast more votes or purchase Steps to unlock!", type: .error)
                         } else {
                             showClubsUnlockConfirm = true
                         }

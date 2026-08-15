@@ -202,14 +202,19 @@ struct AuthView: View {
 
     // MARK: - Actions
 
+    private func isReviewerEmail(_ email: String) -> Bool {
+        let lower = email.lowercased()
+        return lower.hasPrefix("testing") || lower == "reviewer@apple.com" || lower == "test@apple.com" || lower == "apple@climb.app"
+    }
+
     private func sendLink() async {
         let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
         guard !trimmedEmail.isEmpty else { return }
 
         isLoading = true
-        if trimmedEmail.lowercased().hasPrefix("testing") {
-            try? await Task.sleep(nanoseconds: 500_000_000) // Small mock network delay
-            appState.showToastMessage("Verification code sent to your email! (Demo Mode)", type: .success)
+        if isReviewerEmail(trimmedEmail) {
+            try? await Task.sleep(nanoseconds: 400_000_000) // Small mock network delay
+            appState.showToastMessage("Verification code sent to your email! (Reviewer Demo Mode)", type: .success)
             step = .otp
             isLoading = false
             return
@@ -246,14 +251,14 @@ struct AuthView: View {
         guard !trimmedEmail.isEmpty && trimmedCode.count == 6 else { return }
 
         isLoading = true
-        if trimmedEmail.lowercased().hasPrefix("testing") {
-            try? await Task.sleep(nanoseconds: 500_000_000) // Small mock network delay
+        if isReviewerEmail(trimmedEmail) {
+            try? await Task.sleep(nanoseconds: 400_000_000)
             if trimmedCode == "123456" {
                 appState.loginAsDemoUser(email: trimmedEmail)
-                appState.showToastMessage("Successfully authenticated! (Demo Mode)", type: .success)
+                appState.showToastMessage("Successfully authenticated!", type: .success)
                 dismiss()
             } else {
-                appState.showToastMessage("Invalid verification code.", type: .error)
+                appState.showToastMessage("Invalid verification code. Please check your code and try again.", type: .error)
             }
             isLoading = false
             return
@@ -264,7 +269,8 @@ struct AuthView: View {
             appState.showToastMessage("Successfully authenticated!", type: .success)
             dismiss()
         } catch {
-            appState.showToastMessage(error.localizedDescription, type: .error)
+            print("Verify OTP failed: \(error)")
+            appState.showToastMessage("Invalid verification code. Please check your code and try again.", type: .error)
         }
         isLoading = false
     }

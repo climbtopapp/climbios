@@ -36,10 +36,11 @@ final class StoreKitManager: ObservableObject {
         updateListenerTask?.cancel()
     }
 
-    /// Load product information from App Store Connect
+    /// Load product information from App Store Connect or StoreKit configuration
     func loadProducts() async {
         do {
             let products = try await Product.products(for: [Self.gradeProductID, Self.steps100ProductID])
+            print("StoreKit: Fetched \(products.count) products from App Store: \(products.map { $0.id })")
             for product in products {
                 if product.id == Self.gradeProductID {
                     self.gradeProduct = product
@@ -70,21 +71,26 @@ final class StoreKitManager: ObservableObject {
 
         defer { isLoading = false }
 
-        // Fetch product if not cached yet
-        if gradeProduct == nil {
+        var targetProduct = gradeProduct
+        if targetProduct == nil {
             await loadProducts()
+            targetProduct = gradeProduct
         }
 
-        guard let product = gradeProduct else {
-            // Fallback for development/simulator environments if App Store Connect product is unavailable
-            #if DEBUG
-            print("StoreKit: Product not returned from App Store Connect yet. Simulation unlock enabled.")
-            self.isGradePurchased = true
-            return true
-            #else
-            errorMessage = "Could not connect to App Store. Please try again later."
+        if targetProduct == nil {
+            // Direct query fallback
+            do {
+                let prods = try await Product.products(for: [Self.gradeProductID])
+                targetProduct = prods.first
+                self.gradeProduct = targetProduct
+            } catch {
+                print("StoreKit: Direct query for grade failed: \(error)")
+            }
+        }
+
+        guard let product = targetProduct else {
+            errorMessage = "Could not load Personal Grade from App Store. Please try again."
             return false
-            #endif
         }
 
         do {
@@ -121,20 +127,26 @@ final class StoreKitManager: ObservableObject {
 
         defer { isPurchasingSteps = false }
 
-        // Fetch product if not cached yet
-        if steps100Product == nil {
+        var targetProduct = steps100Product
+        if targetProduct == nil {
             await loadProducts()
+            targetProduct = steps100Product
         }
 
-        guard let product = steps100Product else {
-            // Fallback for development/simulator environments
-            #if DEBUG
-            print("StoreKit: 100 Steps product not returned. Simulation purchase enabled.")
-            return true
-            #else
-            errorMessage = "Could not connect to App Store. Please try again later."
+        if targetProduct == nil {
+            // Direct query fallback
+            do {
+                let prods = try await Product.products(for: [Self.steps100ProductID])
+                targetProduct = prods.first
+                self.steps100Product = targetProduct
+            } catch {
+                print("StoreKit: Direct query for 100 Steps failed: \(error)")
+            }
+        }
+
+        guard let product = targetProduct else {
+            errorMessage = "Could not load 100 Steps from App Store. Please try again."
             return false
-            #endif
         }
 
         do {

@@ -124,7 +124,7 @@ struct ProfileView: View {
                         appState.showToastMessage("Your Personal Grade is \(grade)!", type: .info)
                     } else {
                         if avail < 75 {
-                            appState.showToastMessage("Need 75 Steps to unlock Personal Grade. (You have \(avail) Steps)", type: .error)
+                            appState.showToastMessage("Not enough Steps! You need 75 Steps to unlock Personal Grade (you have \(avail) Steps). Cast more votes or purchase Steps to unlock!", type: .error)
                         } else {
                             showGradeConfirm = true
                         }
@@ -149,6 +149,8 @@ struct ProfileView: View {
                     let success = await storeKit.purchase100Steps()
                     if success {
                         await appState.creditPurchasedSteps(amount: 100)
+                    } else if let err = storeKit.errorMessage {
+                        appState.showToastMessage(err, type: .error)
                     }
                 }
             }) {
@@ -173,7 +175,7 @@ struct ProfileView: View {
                     if !isRanksUnlocked {
                         let avail = appState.currentProfile?.availableSteps ?? 0
                         if avail < 250 {
-                            appState.showToastMessage("Need 250 Steps to unlock Leaderboard Ranks. (You have \(avail) Steps)", type: .error)
+                            appState.showToastMessage("Not enough Steps! You need 250 Steps to unlock Official Ranks (you have \(avail) Steps). Cast more votes or purchase Steps to unlock!", type: .error)
                         } else {
                             showRanksConfirm = true
                         }

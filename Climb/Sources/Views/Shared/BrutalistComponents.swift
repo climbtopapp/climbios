@@ -353,10 +353,18 @@ struct BrutalistUnlockModal: View {
                     .foregroundColor(ClimbTheme.textMain)
                     .multilineTextAlignment(.center)
 
-                Text("Your Steps: \(availableSteps)")
-                    .font(ClimbTheme.bodyFont(size: 13))
-                    .fontWeight(.bold)
-                    .foregroundColor(ClimbTheme.textMuted)
+                VStack(spacing: 2) {
+                    Text("Your Steps: \(availableSteps)")
+                        .font(ClimbTheme.bodyFont(size: 13))
+                        .fontWeight(.bold)
+                        .foregroundColor(availableSteps < cost ? ClimbTheme.errorColor : ClimbTheme.textMuted)
+
+                    if availableSteps < cost {
+                        Text("Need \(cost - availableSteps) more Steps to unlock")
+                            .font(ClimbTheme.bodyFont(size: 11))
+                            .foregroundColor(ClimbTheme.errorColor)
+                    }
+                }
 
                 HStack(spacing: 12) {
                     Button(action: onCancel) {

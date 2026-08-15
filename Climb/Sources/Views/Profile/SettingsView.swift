@@ -28,6 +28,7 @@ struct SettingsView: View {
                     votePrefSection
                     CityPickerView(selectedCity: $selectedCity)
                     saveButton
+                    restorePurchasesButton
                     contactSupportButton
                     signOutButton
                     deleteAccountSection
@@ -201,6 +202,36 @@ struct SettingsView: View {
         }
         .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: true))
         .disabled(isSaving)
+    }
+
+    private var restorePurchasesButton: some View {
+        Button(action: {
+            Task {
+                appState.showToastMessage("Restoring purchases...", type: .info)
+                await StoreKitManager.shared.restorePurchases()
+                if StoreKitManager.shared.isGradePurchased {
+                    appState.showToastMessage("Personal Grade unlocked and restored!", type: .success)
+                } else if let error = StoreKitManager.shared.errorMessage {
+                    appState.showToastMessage(error, type: .error)
+                } else {
+                    appState.showToastMessage("Purchases restored.", type: .success)
+                }
+            }
+        }) {
+            Text("Restore Purchases")
+                .font(ClimbTheme.bodyFont(size: 16))
+                .fontWeight(.bold)
+                .textCase(.uppercase)
+                .foregroundColor(ClimbTheme.textMain)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(ClimbTheme.bgSecondary)
+                .overlay(
+                    Rectangle()
+                        .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                )
+        }
+        .buttonStyle(.plain)
     }
 
     private var contactSupportButton: some View {

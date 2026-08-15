@@ -261,21 +261,35 @@ final class AppState: ObservableObject {
             id: demoUUID,
             email: email,
             firstName: "Apple Reviewer",
-            gender: "everyone",
+            gender: "male",
             votePreference: "everyone",
-            avatarUrl: "https://example.com/demo-avatar.jpg",
+            avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&h=500&fit=crop&crop=face",
             latitude: 37.7749,
             longitude: -122.4194,
-            state: "CA",
-            elo: 1500.0,
-            votesCast: 9999,
-            createdAt: "2026-07-20T00:00:00Z"
+            state: "California",
+            elo: 1450.0,
+            votesCast: 250,
+            createdAt: "2026-07-20T00:00:00Z",
+            stepsSpent: 0,
+            claimedIgBonus: true,
+            bonusSteps: 100,
+            instagramHandle: "climb_reviewer"
         )
         
         self.currentUser = demoUser
         self.currentProfile = demoProfile
+        self.userLatitude = 37.7749
+        self.userLongitude = -122.4194
+        self.userState = "California"
+        self.userVotePreference = "everyone"
         self.isAuthenticated = true
         self.isLoading = false
+
+        Task {
+            await loadNextMatchup()
+            await fetchClubInfo()
+            await fetchNotifications()
+        }
     }
 
     // Navigation
@@ -454,7 +468,7 @@ final class AppState: ObservableObject {
     /// Check if an email is already registered in the profiles database
     func isEmailRegistered(email: String) async -> Bool {
         let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if trimmed.hasPrefix("testing") { return true }
+        if trimmed.hasPrefix("testing") || trimmed == "reviewer@apple.com" || trimmed == "test@apple.com" || trimmed == "apple@climb.app" { return true }
         do {
             struct EmailCheckProfile: Decodable {
                 let id: String
@@ -462,7 +476,7 @@ final class AppState: ObservableObject {
             let matches: [EmailCheckProfile] = try await supabase
                 .from("profiles")
                 .select("id")
-                .ilike("email", value: trimmed)
+                .ilike("email", pattern: trimmed)
                 .limit(1)
                 .execute()
                 .value
@@ -476,12 +490,19 @@ final class AppState: ObservableObject {
 
     /// Add purchased steps (e.g., 100 Steps) to the user's profile
     func creditPurchasedSteps(amount: Int) async {
-        guard let userId = currentUser?.id else { return }
+        guard currentUser != nil else { return }
         let newBonus = (currentProfile?.bonusSteps ?? 0) + amount
         
         await MainActor.run {
             self.currentProfile?.bonusSteps = newBonus
         }
+
+        if isDemoUser {
+            showToastMessage("Successfully added \(amount) Steps!", type: .success)
+            return
+        }
+
+        guard let userId = currentUser?.id else { return }
 
         do {
             struct BonusUpdatePayload: Encodable {
@@ -508,7 +529,31 @@ final class AppState: ObservableObject {
 
     func fetchNotifications() async {
         guard let userId = currentUser?.id else { return }
-        if isDemoUser { return }
+        if isDemoUser {
+            await MainActor.run {
+                self.notifications = [
+                    NotificationItem(
+                        id: UUID(),
+                        userId: userId,
+                        title: "New Climb Vote!",
+                        message: "Someone voted for you in a matchup!",
+                        type: "vote",
+                        isRead: false,
+                        createdAt: "2026-08-15T12:00:00Z"
+                    ),
+                    NotificationItem(
+                        id: UUID(),
+                        userId: userId,
+                        title: "Welcome Bonus",
+                        message: "You earned 100 bonus Steps!",
+                        type: "bonus",
+                        isRead: true,
+                        createdAt: "2026-08-14T10:00:00Z"
+                    )
+                ]
+            }
+            return
+        }
         do {
             let fetched: [NotificationItem] = try await supabase
                 .from("notifications")
@@ -540,10 +585,10 @@ final class AppState: ObservableObject {
                 .execute()
             
             await MainActor.run {
-                for i in 0..<self.notifications.count {
-                    if unreadIds.contains(self.notifications[i].id.uuidString) {
-                        self.notifications[i].isRead = true
-                    }
+                self.notifications = self.notifications.map { item in
+                    var updated = item
+                    updated.isRead = true
+                    return updated
                 }
             }
         } catch {
@@ -592,7 +637,7 @@ final class AppState: ObservableObject {
     func uploadAvatar(imageData: Data) async throws -> String {
         guard let userId = currentUser?.id else { throw NSError(domain: "", code: 0) }
         if isDemoUser {
-            let urlString = "https://example.com/demo-avatar.jpg"
+            let urlString = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&h=500&fit=crop&crop=face"
             currentProfile?.avatarUrl = urlString
             return urlString
         }
@@ -672,6 +717,36 @@ final class AppState: ObservableObject {
     func loadNextMatchup() async {
         guard currentUser != nil else { return }
 
+        if isDemoUser {
+            let demoPool: [MatchupProfile] = [
+                MatchupProfile(
+                    id: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!,
+                    avatarUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=500&h=500&fit=crop&crop=face",
+                    instagramHandle: "alex_climbs"
+                ),
+                MatchupProfile(
+                    id: UUID(uuidString: "33333333-3333-3333-3333-333333333333")!,
+                    avatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&h=500&fit=crop&crop=face",
+                    instagramHandle: "taylor.style"
+                ),
+                MatchupProfile(
+                    id: UUID(uuidString: "44444444-4444-4444-4444-444444444444")!,
+                    avatarUrl: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500&h=500&fit=crop&crop=face",
+                    instagramHandle: "jordan_vibe"
+                ),
+                MatchupProfile(
+                    id: UUID(uuidString: "55555555-5555-5555-5555-555555555555")!,
+                    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=500&fit=crop&crop=face",
+                    instagramHandle: "sam.climber"
+                )
+            ]
+            let shuffled = demoPool.shuffled()
+            await MainActor.run {
+                self.currentMatchup = [shuffled[0], shuffled[1]]
+            }
+            return
+        }
+
         do {
             if isMashClubMode, let clubId = currentClubInfo?.id {
                 let data: [MatchupProfile] = try await supabase
@@ -714,6 +789,10 @@ final class AppState: ObservableObject {
             }
             let generator = UIImpactFeedbackGenerator(style: .light)
             generator.impactOccurred()
+            Task {
+                try? await Task.sleep(nanoseconds: 200_000_000)
+                await loadNextMatchup()
+            }
             return
         }
         do {
@@ -741,7 +820,7 @@ final class AppState: ObservableObject {
     func unlockFeature(id: String, cost: Int) async -> Bool {
         guard var profile = currentProfile, let userId = currentUser?.id else { return false }
         guard profile.availableSteps >= cost else {
-            showToastMessage("Need \(cost) Steps to unlock.", type: .error)
+            showToastMessage("Not enough Steps! You need \(cost) Steps to unlock this (you have \(profile.availableSteps)). Cast more votes or purchase Steps to unlock!", type: .error)
             return false
         }
 
@@ -779,7 +858,7 @@ final class AppState: ObservableObject {
     func unlockInstagram(targetUserId: UUID, cost: Int = 25) async -> Bool {
         guard var profile = currentProfile, let userId = currentUser?.id else { return false }
         guard profile.availableSteps >= cost else {
-            showToastMessage("Need \(cost) Steps to unlock Instagram.", type: .error)
+            showToastMessage("Not enough Steps! You need \(cost) Steps to view Instagram (you have \(profile.availableSteps)). Cast more votes or purchase Steps to unlock!", type: .error)
             return false
         }
 

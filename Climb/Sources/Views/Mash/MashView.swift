@@ -619,6 +619,8 @@ struct StepsExplainerSheet: View {
                         let success = await storeKit.purchase100Steps()
                         if success {
                             await appState.creditPurchasedSteps(amount: 100)
+                        } else if let err = storeKit.errorMessage {
+                            appState.showToastMessage(err, type: .error)
                         }
                     }
                 }) {
