@@ -468,7 +468,7 @@ final class AppState: ObservableObject {
     /// Check if an email is already registered in the profiles database
     func isEmailRegistered(email: String) async -> Bool {
         let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if trimmed.hasPrefix("testing") || trimmed == "reviewer@apple.com" || trimmed == "test@apple.com" || trimmed == "apple@climb.app" { return true }
+        if trimmed == "reviewer@apple.com" { return true }
         do {
             struct EmailCheckProfile: Decodable {
                 let id: String

@@ -203,8 +203,8 @@ struct AuthView: View {
     // MARK: - Actions
 
     private func isReviewerEmail(_ email: String) -> Bool {
-        let lower = email.lowercased()
-        return lower.hasPrefix("testing") || lower == "reviewer@apple.com" || lower == "test@apple.com" || lower == "apple@climb.app"
+        let lower = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return lower == "reviewer@apple.com"
     }
 
     private func sendLink() async {
