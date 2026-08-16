@@ -68,6 +68,7 @@
 		EC444458CE4FD78EE97C4EB9 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		F58DD979CD1DA9B37A8401D5 /* Climb.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Climb.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FCDD58EA8F811CBF4C58E282 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		6801378143A1B2C3D4E5F6A1 /* Climb.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Climb.storekit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -189,6 +190,7 @@
 		C1A924B95E92F020660D7529 /* Climb */ = {
 			isa = PBXGroup;
 			children = (
+				6801378143A1B2C3D4E5F6A1 /* Climb.storekit */,
 				FCDD58EA8F811CBF4C58E282 /* Assets.xcassets */,
 				2636858ECF2C1D83D109E199 /* Resources */,
 				5A11F4EDD84D8AFE2ED8D9B1 /* Sources */,

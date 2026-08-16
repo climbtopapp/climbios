@@ -89,8 +89,14 @@ final class StoreKitManager: ObservableObject {
         }
 
         guard let product = targetProduct else {
-            errorMessage = "Could not load Personal Grade from App Store. Please try again."
+            #if DEBUG
+            print("StoreKit: Product '\(Self.gradeProductID)' not returned from App Store (likely in 'Prepare for Submission'). Development simulation unlock enabled.")
+            self.isGradePurchased = true
+            return true
+            #else
+            errorMessage = "Could not load Personal Grade from App Store. Please try again later."
             return false
+            #endif
         }
 
         do {
@@ -145,8 +151,13 @@ final class StoreKitManager: ObservableObject {
         }
 
         guard let product = targetProduct else {
-            errorMessage = "Could not load 100 Steps from App Store. Please try again."
+            #if DEBUG
+            print("StoreKit: Product '\(Self.steps100ProductID)' not returned from App Store (likely in 'Prepare for Submission'). Development simulation purchase enabled.")
+            return true
+            #else
+            errorMessage = "Could not load 100 Steps from App Store. Please try again later."
             return false
+            #endif
         }
 
         do {
