@@ -111,6 +111,7 @@ struct NotificationsFeedView: View {
 
     private func notificationIcon(for title: String) -> String {
         let lower = title.lowercased()
+        if lower.contains("star") || lower.contains("view") || lower.contains("instagram") { return "star.fill" }
         if lower.contains("club") { return "person.3.fill" }
         if lower.contains("rank") || lower.contains("top") { return "trophy.fill" }
         if lower.contains("welcome") || lower.contains("match") { return "sparkles" }

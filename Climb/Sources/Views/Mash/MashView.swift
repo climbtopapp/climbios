@@ -269,6 +269,7 @@ struct MashView: View {
                             if success {
                                 igViewHandle = clean
                                 showIgViewModal = true
+                                await appState.sendProfileViewNotification(targetUserId: target.id)
                             }
                         }
                     },
@@ -507,6 +508,9 @@ struct MashView: View {
         if isUnlocked {
             igViewHandle = clean
             showIgViewModal = true
+            Task {
+                await appState.sendProfileViewNotification(targetUserId: profile.id)
+            }
             return
         }
 

@@ -893,6 +893,33 @@ final class AppState: ObservableObject {
         return true
     }
 
+    /// Send a notification to a user when someone views their profile / presses the star button
+    func sendProfileViewNotification(targetUserId: UUID) async {
+        guard let currentUserId = currentUser?.id, currentUserId != targetUserId else { return }
+        if isDemoUser { return }
+
+        let viewerName = currentProfile?.firstName ?? "Someone"
+        do {
+            struct NotificationInsert: Encodable {
+                let user_id: String
+                let title: String
+                let message: String
+                let type: String
+            }
+            try await supabase
+                .from("notifications")
+                .insert(NotificationInsert(
+                    user_id: targetUserId.uuidString,
+                    title: "Starred Profile View!",
+                    message: "\(viewerName) checked out your Instagram profile!",
+                    type: "star_view"
+                ))
+                .execute()
+        } catch {
+            print("Failed to send profile view notification: \(error)")
+        }
+    }
+
     @MainActor
     func saveInstagramHandle(rawHandle: String) async -> Bool {
         guard var profile = currentProfile, let userId = currentUser?.id else { return false }

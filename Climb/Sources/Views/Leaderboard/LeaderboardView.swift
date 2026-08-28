@@ -125,6 +125,7 @@ struct LeaderboardView: View {
                             if success {
                                 igViewHandle = clean
                                 showIgViewModal = true
+                                await appState.sendProfileViewNotification(targetUserId: target.userId)
                             }
                         }
                     },
@@ -180,6 +181,9 @@ struct LeaderboardView: View {
         if isUnlocked {
             igViewHandle = clean
             showIgViewModal = true
+            Task {
+                await appState.sendProfileViewNotification(targetUserId: row.userId)
+            }
             return
         }
 
