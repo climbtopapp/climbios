@@ -72,6 +72,7 @@ struct Profile: Codable, Identifiable {
         self.bonusSteps = bonusSteps
         self.instagramHandle = instagramHandle
         self.unlockedFeatures = unlockedFeatures
+        self.unlockedInstagrams = unlockedInstagrams
     }
 
     init(from decoder: Decoder) throws {
@@ -90,6 +91,7 @@ struct Profile: Codable, Identifiable {
         self.createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
         self.stepsSpent = try container.decodeIfPresent(Int.self, forKey: .stepsSpent)
         self.claimedIgBonus = try container.decodeIfPresent(Bool.self, forKey: .claimedIgBonus)
+        self.bonusSteps = try container.decodeIfPresent(Int.self, forKey: .bonusSteps)
         self.instagramHandle = try container.decodeIfPresent(String.self, forKey: .instagramHandle)
         self.unlockedFeatures = try container.decodeIfPresent([String].self, forKey: .unlockedFeatures)
         self.unlockedInstagrams = try container.decodeIfPresent([String].self, forKey: .unlockedInstagrams)
