@@ -404,6 +404,14 @@ final class AppState: ObservableObject {
 
 
     func signOut() async {
+        if isDemoUser {
+            currentUser = nil
+            currentProfile = nil
+            isAuthenticated = false
+            currentClubInfo = nil
+            currentClubMembers = []
+            return
+        }
         do {
             try await supabase.auth.signOut()
             currentUser = nil
@@ -417,6 +425,11 @@ final class AppState: ObservableObject {
     }
 
     func deleteAccount() async {
+        if isDemoUser {
+            showToastMessage("Account deleted. Goodbye.", type: .success)
+            await signOut()
+            return
+        }
         do {
             try await supabase.rpc("delete_own_account").execute()
             showToastMessage("Account deleted. Goodbye.", type: .success)
@@ -993,11 +1006,46 @@ final class AppState: ObservableObject {
         guard currentUser != nil else { return [] }
         if isDemoUser {
             return [
-                LeaderboardRow(userId: UUID(), firstName: "Apple Reviewer", avatarUrl: nil, state: "CA", relativeRank: 1),
-                LeaderboardRow(userId: UUID(), firstName: "Sarah", avatarUrl: nil, state: "NY", relativeRank: 2),
-                LeaderboardRow(userId: UUID(), firstName: "Alex", avatarUrl: nil, state: "MI", relativeRank: 3),
-                LeaderboardRow(userId: UUID(), firstName: "David", avatarUrl: nil, state: "TX", relativeRank: 4),
-                LeaderboardRow(userId: UUID(), firstName: "Jessica", avatarUrl: nil, state: "FL", relativeRank: 5)
+                LeaderboardRow(
+                    userId: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!,
+                    firstName: "Apple Reviewer",
+                    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&h=500&fit=crop&crop=face",
+                    state: "CA",
+                    relativeRank: 1,
+                    instagramHandle: "climb_reviewer"
+                ),
+                LeaderboardRow(
+                    userId: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!,
+                    firstName: "Alex",
+                    avatarUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=500&h=500&fit=crop&crop=face",
+                    state: "CA",
+                    relativeRank: 2,
+                    instagramHandle: "alex_climbs"
+                ),
+                LeaderboardRow(
+                    userId: UUID(uuidString: "33333333-3333-3333-3333-333333333333")!,
+                    firstName: "Taylor",
+                    avatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&h=500&fit=crop&crop=face",
+                    state: "NY",
+                    relativeRank: 3,
+                    instagramHandle: "taylor.style"
+                ),
+                LeaderboardRow(
+                    userId: UUID(uuidString: "44444444-4444-4444-4444-444444444444")!,
+                    firstName: "Jordan",
+                    avatarUrl: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500&h=500&fit=crop&crop=face",
+                    state: "MI",
+                    relativeRank: 4,
+                    instagramHandle: "jordan_vibe"
+                ),
+                LeaderboardRow(
+                    userId: UUID(uuidString: "55555555-5555-5555-5555-555555555555")!,
+                    firstName: "Sam",
+                    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=500&fit=crop&crop=face",
+                    state: "FL",
+                    relativeRank: 5,
+                    instagramHandle: "sam.climber"
+                )
             ]
         }
 
@@ -1068,9 +1116,9 @@ final class AppState: ObservableObject {
                 memberCount: 3
             )
             currentClubMembers = [
-                ClubMember(userId: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!, firstName: "Apple Reviewer", avatarUrl: nil, state: "CA"),
-                ClubMember(userId: UUID(), firstName: "Sarah", avatarUrl: nil, state: "NY"),
-                ClubMember(userId: UUID(), firstName: "Alex", avatarUrl: nil, state: "MI")
+                ClubMember(userId: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!, firstName: "Apple Reviewer", avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&h=500&fit=crop&crop=face", state: "CA"),
+                ClubMember(userId: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!, firstName: "Alex", avatarUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=500&h=500&fit=crop&crop=face", state: "CA"),
+                ClubMember(userId: UUID(uuidString: "33333333-3333-3333-3333-333333333333")!, firstName: "Taylor", avatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&h=500&fit=crop&crop=face", state: "NY")
             ]
             return
         }
