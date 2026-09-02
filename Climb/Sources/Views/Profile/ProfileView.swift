@@ -119,10 +119,7 @@ struct ProfileView: View {
                 let isGradeUnlocked = appState.currentProfile?.isUnlocked("grade") ?? false
 
                 Button(action: {
-                    if isGradeUnlocked {
-                        let grade = eloToGrade(appState.currentProfile?.elo)
-                        appState.showToastMessage("Your Personal Grade is \(grade)!", type: .info)
-                    } else {
+                    if !isGradeUnlocked {
                         if avail < 75 {
                             appState.showToastMessage("Not enough Steps! You need 75 Steps to unlock Personal Grade (you have \(avail) Steps). Cast more votes or purchase Steps to unlock!", type: .error)
                         } else {

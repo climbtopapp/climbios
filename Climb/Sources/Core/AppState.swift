@@ -513,7 +513,6 @@ final class AppState: ObservableObject {
         }
 
         if isDemoUser {
-            showToastMessage("Successfully added \(amount) Steps!", type: .success)
             return
         }
 
@@ -528,10 +527,8 @@ final class AppState: ObservableObject {
                 .update(BonusUpdatePayload(bonus_steps: newBonus))
                 .eq("id", value: userId.uuidString)
                 .execute()
-            showToastMessage("Successfully added \(amount) Steps!", type: .success)
         } catch {
             print("Error updating bonus steps in DB: \(error)")
-            showToastMessage("Added \(amount) Steps to your balance!", type: .success)
         }
     }
 

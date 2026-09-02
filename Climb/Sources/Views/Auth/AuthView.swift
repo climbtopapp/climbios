@@ -15,6 +15,7 @@ struct AuthView: View {
     @State private var verificationCode = ""
     @State private var isSignUp = false
     @State private var isLoading = false
+    @State private var otpErrorMessage: String? = nil
     @State private var leftRotation = Double.random(in: -2...2)
     @State private var rightRotation = Double.random(in: -2...2)
 
@@ -180,6 +181,30 @@ struct AuthView: View {
                 keyboardType: .numberPad,
                 textContentType: .oneTimeCode
             )
+            .onChange(of: verificationCode) { _, _ in
+                if otpErrorMessage != nil {
+                    otpErrorMessage = nil
+                }
+            }
+
+            if let errorMsg = otpErrorMessage {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(ClimbTheme.errorColor)
+                        .font(.system(size: 14))
+                    Text(errorMsg)
+                        .font(ClimbTheme.bodyFont(size: 13))
+                        .fontWeight(.bold)
+                        .foregroundColor(ClimbTheme.errorColor)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(10)
+                .background(ClimbTheme.errorColor.opacity(0.1))
+                .overlay(
+                    Rectangle()
+                        .stroke(ClimbTheme.errorColor, lineWidth: 2)
+                )
+            }
 
             Button(action: { Task { await verifyCode() } }) {
                 if isLoading {
@@ -190,9 +215,10 @@ struct AuthView: View {
                 }
             }
             .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: true))
-            .disabled(verificationCode.count != 6 || isLoading)
+            .disabled(isLoading)
 
             Button("Go Back") {
+                otpErrorMessage = nil
                 step = .email
             }
             .buttonStyle(BrutalistTextButtonStyle())
@@ -248,17 +274,29 @@ struct AuthView: View {
     private func verifyCode() async {
         let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
         let trimmedCode = verificationCode.trimmingCharacters(in: .whitespaces)
-        guard !trimmedEmail.isEmpty && trimmedCode.count == 6 else { return }
+        guard !trimmedEmail.isEmpty else { return }
+
+        guard trimmedCode.count == 6 else {
+            let msg = "Please enter the full 6-digit verification code."
+            otpErrorMessage = msg
+            appState.showToastMessage(msg, type: .error)
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            return
+        }
 
         isLoading = true
+        otpErrorMessage = nil
+
         if isReviewerEmail(trimmedEmail) {
             try? await Task.sleep(nanoseconds: 400_000_000)
             if trimmedCode == "123456" {
                 appState.loginAsDemoUser(email: trimmedEmail)
-                appState.showToastMessage("Successfully authenticated!", type: .success)
                 dismiss()
             } else {
-                appState.showToastMessage("Invalid verification code. Please check your code and try again.", type: .error)
+                let msg = "Invalid verification code. Please check your code and try again."
+                otpErrorMessage = msg
+                appState.showToastMessage(msg, type: .error)
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
             }
             isLoading = false
             return
@@ -266,11 +304,13 @@ struct AuthView: View {
 
         do {
             try await appState.verifyOTP(email: trimmedEmail, token: trimmedCode)
-            appState.showToastMessage("Successfully authenticated!", type: .success)
             dismiss()
         } catch {
             print("Verify OTP failed: \(error)")
-            appState.showToastMessage("Invalid verification code. Please check your code and try again.", type: .error)
+            let msg = "Invalid verification code. Please check your code and try again."
+            otpErrorMessage = msg
+            appState.showToastMessage(msg, type: .error)
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
         }
         isLoading = false
     }
