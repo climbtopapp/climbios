@@ -119,6 +119,11 @@ struct LeaderboardView: View {
                     cost: 25,
                     availableSteps: appState.currentProfile?.availableSteps ?? 0,
                     onUnlock: {
+                        let avail = appState.currentProfile?.availableSteps ?? 0
+                        guard avail >= 25 else {
+                            appState.showToastMessage("Need 25 Steps to unlock. (You have \(avail) Steps)", type: .error)
+                            return
+                        }
                         showIgUnlockModal = false
                         Task {
                             let success = await appState.unlockInstagram(targetUserId: target.userId, cost: 25)

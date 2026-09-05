@@ -376,12 +376,14 @@ struct BrutalistUnlockModal: View {
                     .buttonStyle(BrutalistSmallButtonStyle())
 
                     Button(action: onUnlock) {
-                        Text("Unlock (\(cost) Steps)")
+                        Text(availableSteps < cost ? "Need \(cost) Steps" : "Unlock (\(cost) Steps)")
                             .font(ClimbTheme.bodyFont(size: 14))
                             .fontWeight(.bold)
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: false))
+                    .disabled(availableSteps < cost)
+                    .opacity(availableSteps < cost ? 0.5 : 1.0)
                 }
                 .padding(.top, 4)
             }

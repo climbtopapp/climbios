@@ -877,13 +877,43 @@ final class AppState: ObservableObject {
         var currentUnlocked = profile.unlockedInstagrams ?? []
         let targetIdStr = targetUserId.uuidString
         if currentUnlocked.contains(targetIdStr) { return true }
-        currentUnlocked.append(targetIdStr)
-
-        let newSpent = (profile.stepsSpent ?? 0) + cost
-        profile.unlockedInstagrams = currentUnlocked
-        profile.stepsSpent = newSpent
 
         if !isDemoUser {
+            // 1. Attempt secure RPC first
+            struct UnlockRpcResponse: Decodable {
+                let success: Bool?
+                let steps_spent: Int?
+                let already_unlocked: Bool?
+                let instagram_handle: String?
+            }
+
+            do {
+                let res: UnlockRpcResponse = try await supabase
+                    .rpc("unlock_user_instagram", params: ["target_user_id": targetUserId.uuidString])
+                    .execute()
+                    .value
+
+                if res.success == true {
+                    currentUnlocked.append(targetIdStr)
+                    profile.unlockedInstagrams = currentUnlocked
+                    if let spent = res.steps_spent {
+                        profile.stepsSpent = spent
+                    } else {
+                        profile.stepsSpent = (profile.stepsSpent ?? 0) + cost
+                    }
+                    self.currentProfile = profile
+                    return true
+                }
+            } catch {
+                print("unlock_user_instagram RPC call issue, attempting fallback: \(error)")
+            }
+
+            // 2. Fallback to direct update
+            let newSpent = (profile.stepsSpent ?? 0) + cost
+            currentUnlocked.append(targetIdStr)
+            profile.unlockedInstagrams = currentUnlocked
+            profile.stepsSpent = newSpent
+
             do {
                 struct InstagramsPayload: Encodable {
                     let unlocked_instagrams: [String]
@@ -899,6 +929,10 @@ final class AppState: ObservableObject {
                 showToastMessage("Failed to unlock Instagram.", type: .error)
                 return false
             }
+        } else {
+            currentUnlocked.append(targetIdStr)
+            profile.unlockedInstagrams = currentUnlocked
+            profile.stepsSpent = (profile.stepsSpent ?? 0) + cost
         }
 
         self.currentProfile = profile
