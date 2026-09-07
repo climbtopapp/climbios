@@ -11,6 +11,7 @@ struct ProfileView: View {
     @State private var showStepsExplainer = false
     @State private var showGradeConfirm = false
     @State private var showRanksConfirm = false
+    @State private var showStarredSheet = false
     @State private var instagramHandle = ""
     @State private var isSavingIg = false
 
@@ -29,6 +30,10 @@ struct ProfileView: View {
         }
         .sheet(isPresented: $showStepsExplainer) {
             StepsExplainerSheet()
+        }
+        .sheet(isPresented: $showStarredSheet) {
+            StarredClimbersSheet()
+                .environmentObject(appState)
         }
         .overlay {
             if showGradeConfirm {
@@ -182,6 +187,9 @@ struct ProfileView: View {
             // Instagram Handle Card
             instagramCard
 
+            // Starred Climbers Card
+            starredClimbersCard
+
             // Share Profile button
             Button(action: shareProfile) {
                 HStack(spacing: 8) {
@@ -253,6 +261,56 @@ struct ProfileView: View {
                     .fontWeight(.bold)
                     .foregroundColor(ClimbTheme.primaryColor)
             }
+        }
+        .padding(14)
+        .background(ClimbTheme.bgSecondary)
+        .overlay(
+            Rectangle()
+                .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+        )
+        .padding(.top, 16)
+    }
+
+    private var starredClimbersCard: some View {
+        let count = appState.currentProfile?.unlockedInstagrams?.count ?? 0
+        return HStack(spacing: 12) {
+            HStack(spacing: 10) {
+                ZStack {
+                    Rectangle()
+                        .fill(ClimbTheme.primaryColor)
+                        .frame(width: 36, height: 36)
+                        .overlay(
+                            Rectangle()
+                                .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                        )
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(.black)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("STARRED CLIMBERS")
+                        .font(ClimbTheme.bodyFont(size: 13))
+                        .fontWeight(.bold)
+                        .foregroundColor(ClimbTheme.textMain)
+                        .tracking(0.5)
+
+                    Text("\(count) \(count == 1 ? "profile" : "profiles") unlocked")
+                        .font(ClimbTheme.bodyFont(size: 12))
+                        .foregroundColor(ClimbTheme.textMuted)
+                }
+            }
+
+            Spacer()
+
+            Button(action: {
+                showStarredSheet = true
+            }) {
+                Text("View")
+                    .font(ClimbTheme.bodyFont(size: 13))
+                    .fontWeight(.bold)
+            }
+            .buttonStyle(BrutalistSmallButtonStyle())
         }
         .padding(14)
         .background(ClimbTheme.bgSecondary)
@@ -582,6 +640,154 @@ struct PersonalGradePurchaseSheet: View {
             Text(text)
                 .font(ClimbTheme.bodyFont(size: 13))
                 .foregroundColor(ClimbTheme.textMain)
+        }
+    }
+}
+
+/// Starred Climbers sheet showing unlocked Instagram profiles
+struct StarredClimbersSheet: View {
+    @EnvironmentObject var appState: AppState
+    @Environment(\.dismiss) var dismiss
+
+    @State private var starredUsers: [StarredUser] = []
+    @State private var isLoading = true
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                if isLoading {
+                    Spacer()
+                    ProgressView().tint(ClimbTheme.primaryColor)
+                        .scaleEffect(1.2)
+                    Text("Loading starred profiles...")
+                        .font(ClimbTheme.bodyFont(size: 13))
+                        .foregroundColor(ClimbTheme.textMuted)
+                        .padding(.top, 12)
+                    Spacer()
+                } else if starredUsers.isEmpty {
+                    Spacer()
+                    VStack(spacing: 12) {
+                        Text("⭐")
+                            .font(.system(size: 44))
+                        Text("No Starred Climbers Yet")
+                            .font(ClimbTheme.displayFont(size: 20))
+                            .foregroundColor(ClimbTheme.textMain)
+                        Text("Star users on the Summit or in Matchups to unlock and view their Instagram profiles here anytime!")
+                            .font(ClimbTheme.bodyFont(size: 13))
+                            .foregroundColor(ClimbTheme.textMuted)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                    }
+                    Spacer()
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 12) {
+                            ForEach(starredUsers) { user in
+                                starredUserRow(user)
+                            }
+                        }
+                        .padding(16)
+                    }
+                }
+
+                Rectangle()
+                    .fill(ClimbTheme.borderColor)
+                    .frame(height: 2)
+
+                Button(action: { dismiss() }) {
+                    Text("Done")
+                }
+                .buttonStyle(BrutalistSecondaryButtonStyle(isFullWidth: true))
+                .padding(16)
+            }
+            .background(ClimbTheme.bgPrimary)
+            .navigationTitle("STARRED CLIMBERS")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { dismiss() }) {
+                        Text("✕")
+                            .font(.title2)
+                            .foregroundColor(ClimbTheme.textMuted)
+                    }
+                }
+            }
+        }
+        .task {
+            starredUsers = await appState.loadStarredProfiles()
+            isLoading = false
+        }
+    }
+
+    private func starredUserRow(_ user: StarredUser) -> some View {
+        let cleanHandle = (user.instagramHandle ?? "").replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return HStack(spacing: 12) {
+            AsyncImage(url: URL(string: user.avatarUrl ?? "")) { phase in
+                if let img = phase.image {
+                    img.resizable().scaledToFill()
+                } else {
+                    Rectangle().fill(ClimbTheme.bgSecondary)
+                }
+            }
+            .frame(width: 44, height: 44)
+            .clipped()
+            .overlay(
+                Rectangle()
+                    .stroke(ClimbTheme.borderColor, lineWidth: 2)
+            )
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(user.firstName ?? "Climber")
+                    .font(ClimbTheme.bodyFont(size: 14))
+                    .fontWeight(.bold)
+                    .foregroundColor(ClimbTheme.textMain)
+                    .lineLimit(1)
+
+                Text(user.state ?? "Unknown Region")
+                    .font(ClimbTheme.bodyFont(size: 12))
+                    .foregroundColor(ClimbTheme.textMuted)
+                    .lineLimit(1)
+
+                if !cleanHandle.isEmpty {
+                    Text("@\(cleanHandle)")
+                        .font(ClimbTheme.bodyFont(size: 12))
+                        .fontWeight(.bold)
+                        .foregroundColor(ClimbTheme.primaryColor)
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer()
+
+            if !cleanHandle.isEmpty {
+                Button(action: {
+                    openInstagram(cleanHandle)
+                }) {
+                    Text("Open IG")
+                        .font(ClimbTheme.bodyFont(size: 12))
+                        .fontWeight(.bold)
+                }
+                .buttonStyle(BrutalistSmallButtonStyle())
+            } else {
+                Text("No Handle")
+                    .font(ClimbTheme.bodyFont(size: 11))
+                    .foregroundColor(ClimbTheme.textMuted)
+            }
+        }
+        .padding(12)
+        .background(ClimbTheme.bgSecondary)
+        .overlay(
+            Rectangle()
+                .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+        )
+    }
+
+    private func openInstagram(_ handle: String) {
+        if let url = URL(string: "https://instagram.com/\(handle)") {
+            Task { @MainActor in
+                await UIApplication.shared.open(url)
+            }
         }
     }
 }

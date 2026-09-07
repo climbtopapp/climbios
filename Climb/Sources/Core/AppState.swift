@@ -178,6 +178,31 @@ struct UserRankStats: Codable {
     }
 }
 
+/// Starred / unlocked climber profile
+struct StarredUser: Codable, Identifiable {
+    let id: UUID
+    let firstName: String?
+    let avatarUrl: String?
+    let state: String?
+    let instagramHandle: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case firstName = "first_name"
+        case avatarUrl = "avatar_url"
+        case state
+        case instagramHandle = "instagram_handle"
+    }
+
+    init(id: UUID, firstName: String? = nil, avatarUrl: String? = nil, state: String? = nil, instagramHandle: String? = nil) {
+        self.id = id
+        self.firstName = firstName
+        self.avatarUrl = avatarUrl
+        self.state = state
+        self.instagramHandle = instagramHandle
+    }
+}
+
 /// Club info model
 struct ClubInfo: Codable, Identifiable {
     let id: UUID
@@ -937,6 +962,38 @@ final class AppState: ObservableObject {
 
         self.currentProfile = profile
         return true
+    }
+
+    /// Load full profiles for all previously starred/unlocked climbers
+    func loadStarredProfiles() async -> [StarredUser] {
+        guard let unlocked = currentProfile?.unlockedInstagrams, !unlocked.isEmpty else {
+            return []
+        }
+
+        if isDemoUser {
+            return [
+                StarredUser(
+                    id: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!,
+                    firstName: "Sarah Jenkins",
+                    avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&h=500&fit=crop&crop=face",
+                    state: "CA",
+                    instagramHandle: "sarahclimbs"
+                )
+            ]
+        }
+
+        do {
+            let users: [StarredUser] = try await supabase
+                .from("profiles")
+                .select("id, first_name, avatar_url, state, instagram_handle")
+                .in("id", values: unlocked)
+                .execute()
+                .value
+            return users
+        } catch {
+            print("Failed to load starred profiles: \(error)")
+            return []
+        }
     }
 
     /// Send a notification to a user when someone views their profile / presses the star button
