@@ -208,7 +208,7 @@ struct ClubInfo: Codable, Identifiable {
     let id: UUID
     let name: String
     let code: String
-    let createdBy: UUID
+    let createdBy: UUID?
     let memberCount: Int?
 
     enum CodingKeys: String, CodingKey {
@@ -326,7 +326,11 @@ final class AppState: ObservableObject {
 
     // Mash
     @Published var currentMatchup: [MatchupProfile] = []
-    @Published var isMashClubMode = false
+    @Published var mashScope: MashScope = .global
+    var isMashClubMode: Bool {
+        get { mashScope == .club }
+        set { mashScope = newValue ? .club : .global }
+    }
 
     // Leaderboard
     @Published var currentLeaderboardTab: LeaderboardTab = .global
@@ -354,6 +358,12 @@ final class AppState: ObservableObject {
 
     enum AppTab: String, CaseIterable {
         case mash, leaderboard, clubs, profile
+    }
+
+    enum MashScope: String, CaseIterable {
+        case global = "Global"
+        case region = "Region"
+        case club = "Club"
     }
 
     enum LeaderboardTab: String {
@@ -785,7 +795,7 @@ final class AppState: ObservableObject {
         }
 
         do {
-            if isMashClubMode, let clubId = currentClubInfo?.id {
+            if mashScope == .club, let clubId = currentClubInfo?.id {
                 let data: [MatchupProfile] = try await supabase
                     .rpc("get_matchup_club", params: [
                         "voter_id": currentUser!.id.uuidString,
@@ -795,6 +805,58 @@ final class AppState: ObservableObject {
                     .execute()
                     .value
                 currentMatchup = data
+            } else if mashScope == .region {
+                let region = (currentProfile?.state?.isEmpty == false ? currentProfile?.state : nil) ?? (userState.isEmpty == false && userState != "Unknown" ? userState : nil)
+                if let region = region {
+                    do {
+                        let data: [MatchupProfile] = try await supabase
+                            .rpc("get_matchup_region", params: [
+                                "voter_id": currentUser!.id.uuidString,
+                                "pref": userVotePreference,
+                                "filter_state": region
+                            ])
+                            .execute()
+                            .value
+                        currentMatchup = data
+                    } catch {
+                        print("get_matchup_region failed, trying fallback: \(error)")
+                        struct ProfileMatch: Decodable {
+                            let id: UUID
+                            let avatarUrl: String?
+                            let instagramHandle: String?
+
+                            enum CodingKeys: String, CodingKey {
+                                case id
+                                case avatarUrl = "avatar_url"
+                                case instagramHandle = "instagram_handle"
+                            }
+                        }
+
+                        var query = supabase
+                            .from("profiles")
+                            .select("id, avatar_url, instagram_handle")
+                            .neq("id", value: currentUser!.id.uuidString)
+                            .not("avatar_url", operator: .is, value: "null")
+                            .eq("state", value: region)
+
+                        if userVotePreference != "everyone" {
+                            query = query.eq("gender", value: userVotePreference)
+                        }
+
+                        let pool: [ProfileMatch] = (try? await query.limit(20).execute().value) ?? []
+                        if pool.count >= 2 {
+                            let shuffled = pool.shuffled()
+                            currentMatchup = [
+                                MatchupProfile(id: shuffled[0].id, avatarUrl: shuffled[0].avatarUrl, instagramHandle: shuffled[0].instagramHandle),
+                                MatchupProfile(id: shuffled[1].id, avatarUrl: shuffled[1].avatarUrl, instagramHandle: shuffled[1].instagramHandle)
+                            ]
+                        } else {
+                            currentMatchup = []
+                        }
+                    }
+                } else {
+                    currentMatchup = []
+                }
             } else {
                 let data: [MatchupProfile] = try await supabase
                     .rpc("get_matchup", params: [
@@ -1257,6 +1319,97 @@ final class AppState: ObservableObject {
             return
         }
         try await supabase.rpc("join_club", params: ["invite_code": code]).execute()
+        await fetchClubInfo()
+    }
+
+    func joinSchoolClub(name: String, code: String) async throws {
+        if isDemoUser {
+            currentClubInfo = ClubInfo(
+                id: UUID(),
+                name: name,
+                code: code.uppercased(),
+                createdBy: nil,
+                memberCount: 5
+            )
+            currentClubMembers = [
+                ClubMember(userId: currentUser!.id, firstName: "Apple Reviewer", avatarUrl: nil, state: "TX"),
+                ClubMember(userId: UUID(), firstName: "Student 1", avatarUrl: nil, state: "TX"),
+                ClubMember(userId: UUID(), firstName: "Student 2", avatarUrl: nil, state: "TX")
+            ]
+            return
+        }
+
+        // Try RPC first
+        do {
+            struct SchoolClubRpcResult: Decodable {
+                let id: UUID?
+                let name: String?
+                let code: String?
+            }
+            let _: SchoolClubRpcResult = try await supabase
+                .rpc("join_school_club", params: ["school_name": name, "school_code": code])
+                .execute()
+                .value
+            await fetchClubInfo()
+            return
+        } catch {
+            print("join_school_club RPC failed, falling back: \(error)")
+        }
+
+        // Fallback: direct database lookup & insert
+        struct ClubRecord: Codable {
+            let id: UUID
+            let name: String
+            let code: String
+            let createdBy: UUID?
+
+            enum CodingKeys: String, CodingKey {
+                case id, name, code
+                case createdBy = "created_by"
+            }
+        }
+
+        guard let uid = currentUser?.id else { return }
+
+        // Leave any existing club
+        _ = try? await supabase.from("club_members").delete().eq("user_id", value: uid.uuidString).execute()
+
+        // Check if school club exists
+        var targetClubId: UUID?
+        let existingClubs: [ClubRecord] = (try? await supabase
+            .from("clubs")
+            .select("id, name, code, created_by")
+            .eq("code", value: code.uppercased())
+            .execute()
+            .value) ?? []
+
+        if let existing = existingClubs.first {
+            targetClubId = existing.id
+        } else {
+            struct NewClubPayload: Encodable {
+                let name: String
+                let code: String
+            }
+            let inserted: [ClubRecord] = try await supabase
+                .from("clubs")
+                .insert(NewClubPayload(name: name, code: code.uppercased()))
+                .select("id, name, code, created_by")
+                .execute()
+                .value
+            targetClubId = inserted.first?.id
+        }
+
+        if let clubId = targetClubId {
+            struct NewMemberPayload: Encodable {
+                let club_id: String
+                let user_id: String
+            }
+            try await supabase
+                .from("club_members")
+                .insert(NewMemberPayload(club_id: clubId.uuidString, user_id: uid.uuidString))
+                .execute()
+        }
+
         await fetchClubInfo()
     }
 

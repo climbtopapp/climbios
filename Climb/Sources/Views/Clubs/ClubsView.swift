@@ -13,6 +13,7 @@ struct ClubsView: View {
     @State private var editedName = ""
     @State private var showLeaveConfirm = false
     @State private var showUnlockModal = false
+    @State private var showSchoolModal = false
 
     private var isClubsUnlocked: Bool {
         appState.currentProfile?.isUnlocked("clubs") ?? false
@@ -44,6 +45,10 @@ struct ClubsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(ClimbTheme.bgPrimary)
+        .sheet(isPresented: $showSchoolModal) {
+            JoinSchoolSheet()
+                .environmentObject(appState)
+        }
         .task {
             if isClubsUnlocked {
                 await appState.fetchClubInfo()
@@ -114,6 +119,51 @@ struct ClubsView: View {
     private var noClubView: some View {
         ScrollView {
             VStack(spacing: 20) {
+                // Join Your School
+                VStack(spacing: 14) {
+                    HStack(spacing: 10) {
+                        ZStack {
+                            Rectangle()
+                                .fill(ClimbTheme.primaryColor)
+                                .frame(width: 38, height: 38)
+                                .overlay(
+                                    Rectangle().stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                                )
+                            Image(systemName: "graduationcap.fill")
+                                .font(.system(size: 18))
+                                .foregroundColor(.black)
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Join Your School")
+                                .font(ClimbTheme.displayFont(size: 22))
+                                .foregroundColor(ClimbTheme.textMain)
+                            Text("Connect and climb with students at your university")
+                                .font(ClimbTheme.bodyFont(size: 12))
+                                .foregroundColor(ClimbTheme.textMuted)
+                        }
+                        Spacer()
+                    }
+
+                    Button(action: {
+                        showSchoolModal = true
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 14, weight: .bold))
+                            Text("Find Your School")
+                        }
+                    }
+                    .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: true))
+                }
+                .brutalistCard(padding: 24)
+
+                // OR divider
+                Text("— OR —")
+                    .font(ClimbTheme.bodyFont(size: 14))
+                    .fontWeight(.semibold)
+                    .foregroundColor(ClimbTheme.textMuted)
+
                 // Join a Club
                 VStack(spacing: 15) {
                     Text("Join a Club")
@@ -475,6 +525,317 @@ struct ClubsView: View {
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let rootVC = windowScene.windows.first?.rootViewController {
             rootVC.present(activityVC, animated: true)
+        }
+    }
+}
+
+/// School option model
+struct SchoolOptionItem: Identifiable {
+    let id: String
+    let name: String
+    let code: String
+    let emailDomain: String
+}
+
+private let availableSchoolsList: [SchoolOptionItem] = [
+    SchoolOptionItem(
+        id: "uatx",
+        name: "University of Austin (UATX)",
+        code: "UATX",
+        emailDomain: "@student.uaustin.org"
+    ),
+    SchoolOptionItem(
+        id: "utaustin",
+        name: "UT Austin",
+        code: "UTAUSTIN",
+        emailDomain: "@my.utexas.edu"
+    )
+]
+
+/// Sheet modal for searching and joining a school club via school email
+struct JoinSchoolSheet: View {
+    @EnvironmentObject var appState: AppState
+    @Environment(\.dismiss) var dismiss
+
+    @State private var searchText = ""
+    @State private var selectedSchool: SchoolOptionItem?
+    @State private var emailInput = ""
+    @State private var isSubmitting = false
+    @State private var errorMessage: String?
+
+    private var filteredSchools: [SchoolOptionItem] {
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            return availableSchoolsList
+        }
+        return availableSchoolsList.filter {
+            $0.name.localizedCaseInsensitiveContains(trimmed) ||
+            $0.code.localizedCaseInsensitiveContains(trimmed)
+        }
+    }
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                if let school = selectedSchool {
+                    emailVerificationView(for: school)
+                } else {
+                    schoolListView
+                }
+            }
+            .background(ClimbTheme.bgPrimary)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text(selectedSchool != nil ? "VERIFY SCHOOL EMAIL" : "JOIN YOUR SCHOOL")
+                        .font(ClimbTheme.bodyFont(size: 16))
+                        .fontWeight(.bold)
+                        .tracking(0.5)
+                        .foregroundColor(ClimbTheme.textMain)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { dismiss() }) {
+                        Text("✕")
+                            .font(.title2)
+                            .foregroundColor(ClimbTheme.textMuted)
+                    }
+                }
+            }
+        }
+    }
+
+    private var schoolListView: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                // Search box
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(ClimbTheme.textMuted)
+                    TextField("Search your school...", text: $searchText)
+                        .font(ClimbTheme.bodyFont(size: 15))
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                    if !searchText.isEmpty {
+                        Button(action: { searchText = "" }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(ClimbTheme.textMuted)
+                        }
+                    }
+                }
+                .padding(12)
+                .background(ClimbTheme.bgSecondary)
+                .overlay(
+                    Rectangle().stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                )
+
+                // List of schools
+                if filteredSchools.isEmpty {
+                    VStack(spacing: 10) {
+                        Text("No schools found")
+                            .font(ClimbTheme.displayFont(size: 18))
+                            .foregroundColor(ClimbTheme.textMain)
+                        Text("We couldn't find a school matching \"\(searchText)\".")
+                            .font(ClimbTheme.bodyFont(size: 13))
+                            .foregroundColor(ClimbTheme.textMuted)
+                    }
+                    .padding(.vertical, 30)
+                } else {
+                    VStack(spacing: 12) {
+                        ForEach(filteredSchools) { school in
+                            Button(action: {
+                                selectedSchool = school
+                                emailInput = ""
+                                errorMessage = nil
+                            }) {
+                                HStack(spacing: 12) {
+                                    ZStack {
+                                        Rectangle()
+                                            .fill(ClimbTheme.primaryColor)
+                                            .frame(width: 38, height: 38)
+                                            .overlay(
+                                                Rectangle().stroke(ClimbTheme.borderColor, lineWidth: 2)
+                                            )
+                                        Image(systemName: "building.columns.fill")
+                                            .font(.system(size: 16))
+                                            .foregroundColor(.black)
+                                    }
+
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(school.name)
+                                            .font(ClimbTheme.bodyFont(size: 15))
+                                            .fontWeight(.bold)
+                                            .foregroundColor(ClimbTheme.textMain)
+                                            .multilineTextAlignment(.leading)
+                                        Text("Official School Club")
+                                            .font(ClimbTheme.bodyFont(size: 12))
+                                            .foregroundColor(ClimbTheme.textMuted)
+                                    }
+
+                                    Spacer()
+
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(ClimbTheme.textMuted)
+                                }
+                                .padding(14)
+                                .background(ClimbTheme.bgSecondary)
+                                .overlay(
+                                    Rectangle().stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                // Coming soon banner
+                HStack(spacing: 10) {
+                    Image(systemName: "clock.badge.checkmark")
+                        .font(.system(size: 16))
+                        .foregroundColor(ClimbTheme.accentColor)
+
+                    Text("More schools coming soon.")
+                        .font(ClimbTheme.bodyFont(size: 13))
+                        .fontWeight(.bold)
+                        .foregroundColor(ClimbTheme.textMuted)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(14)
+                .background(ClimbTheme.bgSecondary)
+                .overlay(
+                    Rectangle().stroke(ClimbTheme.borderColor.opacity(0.4), lineWidth: 1.5)
+                )
+                .padding(.top, 8)
+            }
+            .padding(20)
+        }
+    }
+
+    @ViewBuilder
+    private func emailVerificationView(for school: SchoolOptionItem) -> some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                // Back button
+                HStack {
+                    Button(action: {
+                        selectedSchool = nil
+                        errorMessage = nil
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.left")
+                                .font(.system(size: 14, weight: .bold))
+                            Text("All Schools")
+                                .font(ClimbTheme.bodyFont(size: 14))
+                                .fontWeight(.bold)
+                        }
+                        .foregroundColor(ClimbTheme.primaryColor)
+                    }
+                    Spacer()
+                }
+
+                // School Info Box
+                VStack(spacing: 8) {
+                    Image(systemName: "graduationcap.fill")
+                        .font(.system(size: 36))
+                        .foregroundColor(ClimbTheme.primaryColor)
+
+                    Text(school.name)
+                        .font(ClimbTheme.displayFont(size: 22))
+                        .foregroundColor(ClimbTheme.textMain)
+                        .multilineTextAlignment(.center)
+
+                    Text("Enter your school email address to verify student access and join this club.")
+                        .font(ClimbTheme.bodyFont(size: 13))
+                        .foregroundColor(ClimbTheme.textMuted)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 10)
+                }
+                .padding(20)
+                .frame(maxWidth: .infinity)
+                .background(ClimbTheme.bgSecondary)
+                .overlay(
+                    Rectangle().stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                )
+
+                // Input Box
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("SCHOOL EMAIL ADDRESS")
+                        .font(ClimbTheme.bodyFont(size: 12))
+                        .fontWeight(.bold)
+                        .foregroundColor(ClimbTheme.textMuted)
+                        .tracking(0.5)
+
+                    TextField("yourname@school.edu", text: $emailInput)
+                        .font(ClimbTheme.bodyFont(size: 16))
+                        .foregroundColor(ClimbTheme.textMain)
+                        .keyboardType(.emailAddress)
+                        .textContentType(.emailAddress)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                        .padding(12)
+                        .background(ClimbTheme.bgPrimary)
+                        .overlay(
+                            Rectangle().stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                        )
+
+                    if let err = errorMessage {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 12))
+                            Text(err)
+                                .font(ClimbTheme.bodyFont(size: 13))
+                                .fontWeight(.bold)
+                        }
+                        .foregroundColor(ClimbTheme.errorColor)
+                        .padding(.top, 2)
+                    }
+                }
+                .padding(20)
+                .background(ClimbTheme.bgSecondary)
+                .overlay(
+                    Rectangle().stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                )
+
+                Button(action: {
+                    verifyAndJoin(school: school)
+                }) {
+                    HStack {
+                        if isSubmitting {
+                            ProgressView().tint(.black)
+                        } else {
+                            Text("Verify & Join Club")
+                        }
+                    }
+                }
+                .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: true))
+                .disabled(emailInput.trimmingCharacters(in: .whitespaces).isEmpty || isSubmitting)
+            }
+            .padding(20)
+        }
+    }
+
+    private func verifyAndJoin(school: SchoolOptionItem) {
+        let clean = emailInput.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let requiredSuffix = school.emailDomain.lowercased()
+
+        // Strict suffix check. If incorrect, show ONLY "Could not verify your email."
+        guard clean.hasSuffix(requiredSuffix), clean.count > requiredSuffix.count else {
+            errorMessage = "Could not verify your email."
+            return
+        }
+
+        isSubmitting = true
+        errorMessage = nil
+
+        Task {
+            do {
+                try await appState.joinSchoolClub(name: school.name, code: school.code)
+                appState.showToastMessage("Welcome to \(school.name)!", type: .success)
+                dismiss()
+            } catch {
+                errorMessage = "Failed to join club. Please try again."
+            }
+            isSubmitting = false
         }
     }
 }

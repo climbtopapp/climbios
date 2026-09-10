@@ -31,26 +31,54 @@ struct MashView: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             VStack(spacing: 0) {
-            // Header tabs: Global / Club
+            // Header tabs: Global / Region / Club
             HStack {
                 Spacer()
                 HStack(spacing: 0) {
                     Button(action: {
-                        appState.isMashClubMode = false
+                        appState.mashScope = .global
                         Task { await appState.loadNextMatchup() }
                         randomizeRotations()
                     }) {
                         Text("Global")
-                            .font(ClimbTheme.bodyFont(size: 14))
+                            .font(ClimbTheme.bodyFont(size: 13))
                             .fontWeight(.bold)
                             .textCase(.uppercase)
-                            .foregroundColor(!appState.isMashClubMode ? .black : ClimbTheme.textMuted)
-                            .padding(.horizontal, 16)
+                            .foregroundColor(appState.mashScope == .global ? .black : ClimbTheme.textMuted)
+                            .padding(.horizontal, 14)
                             .padding(.vertical, 8)
-                            .background(!appState.isMashClubMode ? ClimbTheme.primaryColor : Color.clear)
+                            .background(appState.mashScope == .global ? ClimbTheme.primaryColor : Color.clear)
                             .overlay(
                                 Group {
-                                    if !appState.isMashClubMode {
+                                    if appState.mashScope == .global {
+                                        Rectangle().stroke(ClimbTheme.borderColor, lineWidth: 2)
+                                    }
+                                }
+                            )
+                    }
+                    .buttonStyle(.plain)
+
+                    Button(action: {
+                        let region = (appState.currentProfile?.state?.isEmpty == false ? appState.currentProfile?.state : nil) ?? (appState.userState.isEmpty == false && appState.userState != "Unknown" ? appState.userState : nil)
+                        if region == nil {
+                            appState.showToastMessage("Please set your region in Edit Profile first.", type: .error)
+                            return
+                        }
+                        appState.mashScope = .region
+                        Task { await appState.loadNextMatchup() }
+                        randomizeRotations()
+                    }) {
+                        Text("Region")
+                            .font(ClimbTheme.bodyFont(size: 13))
+                            .fontWeight(.bold)
+                            .textCase(.uppercase)
+                            .foregroundColor(appState.mashScope == .region ? .black : ClimbTheme.textMuted)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(appState.mashScope == .region ? ClimbTheme.primaryColor : Color.clear)
+                            .overlay(
+                                Group {
+                                    if appState.mashScope == .region {
                                         Rectangle().stroke(ClimbTheme.borderColor, lineWidth: 2)
                                     }
                                 }
@@ -74,21 +102,21 @@ struct MashView: View {
                             appState.selectedTab = .clubs
                             return
                         }
-                        appState.isMashClubMode = true
+                        appState.mashScope = .club
                         Task { await appState.loadNextMatchup() }
                         randomizeRotations()
                     }) {
                         Text("Club")
-                            .font(ClimbTheme.bodyFont(size: 14))
+                            .font(ClimbTheme.bodyFont(size: 13))
                             .fontWeight(.bold)
                             .textCase(.uppercase)
-                            .foregroundColor(appState.isMashClubMode ? .black : ClimbTheme.textMuted)
-                            .padding(.horizontal, 16)
+                            .foregroundColor(appState.mashScope == .club ? .black : ClimbTheme.textMuted)
+                            .padding(.horizontal, 14)
                             .padding(.vertical, 8)
-                            .background(appState.isMashClubMode ? ClimbTheme.primaryColor : Color.clear)
+                            .background(appState.mashScope == .club ? ClimbTheme.primaryColor : Color.clear)
                             .overlay(
                                 Group {
-                                    if appState.isMashClubMode {
+                                    if appState.mashScope == .club {
                                         Rectangle().stroke(ClimbTheme.borderColor, lineWidth: 2)
                                     }
                                 }
@@ -168,14 +196,12 @@ struct MashView: View {
                             .frame(width: 56, height: 56)
                             .foregroundColor(ClimbTheme.accentColor)
 
-                        Text(appState.isMashClubMode ? "Not Enough Members" : "No Matchups Yet")
+                        Text(emptyMatchupTitle)
                             .font(ClimbTheme.displayFont(size: 22))
                             .fontWeight(.bold)
                             .multilineTextAlignment(.center)
 
-                        Text(appState.isMashClubMode ?
-                             "There are not enough active members in this club with photos to vote on. Invite more club members to join!" :
-                             "To start voting, invite more friends to join Climb and upload their photos!")
+                        Text(emptyMatchupMessage)
                             .font(ClimbTheme.bodyFont(size: 14))
                             .foregroundColor(ClimbTheme.textMuted)
                             .multilineTextAlignment(.center)
@@ -544,6 +570,26 @@ struct MashView: View {
     private func randomizeRotations() {
         leftRotation = Double.random(in: -2...2)
         rightRotation = Double.random(in: -2...2)
+    }
+
+    private var emptyMatchupTitle: String {
+        switch appState.mashScope {
+        case .club: return "Not Enough Members"
+        case .region: return "No Regional Matchups"
+        case .global: return "No Matchups Yet"
+        }
+    }
+
+    private var emptyMatchupMessage: String {
+        switch appState.mashScope {
+        case .club:
+            return "There are not enough active members in this club with photos to vote on. Invite more club members to join!"
+        case .region:
+            let reg = (appState.currentProfile?.state?.isEmpty == false ? appState.currentProfile?.state : nil) ?? (appState.userState.isEmpty == false && appState.userState != "Unknown" ? appState.userState : nil) ?? "your region"
+            return "There are not enough climbers in \(reg) with photos to vote on yet. Check back soon or switch to Global!"
+        case .global:
+            return "To start voting, invite more friends to join Climb and upload their photos!"
+        }
     }
 
     private var unreadNotificationsCount: Int {

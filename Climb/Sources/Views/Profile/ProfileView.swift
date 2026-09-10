@@ -571,7 +571,7 @@ struct PersonalGradePurchaseSheet: View {
 
             // Feature Highlights
             VStack(alignment: .leading, spacing: 12) {
-                featureRow(icon: "star.fill", text: "Reveal your official Letter Grade (A+, A, B, C...)")
+                featureRow(icon: "star.fill", text: "Reveal your official Personal Grade score (out of 100)")
                 featureRow(icon: "chart.line.uptrend.xyaxis", text: "Real-time ELO rating score calculation")
                 featureRow(icon: "trophy.fill", text: "Compare your score on Global & Regional leaderboards")
             }
