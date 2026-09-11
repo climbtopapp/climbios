@@ -450,7 +450,8 @@ struct ClubsView: View {
     // MARK: - Actions
 
     private func joinClub() async {
-        let code = joinCode.trimmingCharacters(in: .whitespaces).uppercased()
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        let code = joinCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         guard code.count == 6 else {
             appState.showToastMessage("Please enter a valid 6-character code", type: .error)
             return
@@ -462,7 +463,14 @@ struct ClubsView: View {
             appState.showToastMessage("Joined club successfully!", type: .success)
             joinCode = ""
         } catch {
-            appState.showToastMessage(error.localizedDescription, type: .error)
+            let errString = "\(error)"
+            if errString.localizedCaseInsensitiveContains("100 votes") {
+                appState.showToastMessage("You must cast at least 100 votes to access Clubs.", type: .error)
+            } else if errString.localizedCaseInsensitiveContains("leave your current club") {
+                appState.showToastMessage("You must leave your current club before joining another.", type: .error)
+            } else {
+                appState.showToastMessage("No club code found", type: .error)
+            }
         }
         isJoining = false
     }

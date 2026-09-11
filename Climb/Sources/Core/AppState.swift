@@ -1318,8 +1318,17 @@ final class AppState: ObservableObject {
             ]
             return
         }
-        try await supabase.rpc("join_club", params: ["invite_code": code]).execute()
-        await fetchClubInfo()
+        do {
+            try await supabase.rpc("join_club", params: ["invite_code": code]).execute()
+            await fetchClubInfo()
+        } catch {
+            let errString = "\(error)"
+            if errString.localizedCaseInsensitiveContains("No club") ||
+               errString.localizedCaseInsensitiveContains("not found") {
+                throw NSError(domain: "Climb", code: 404, userInfo: [NSLocalizedDescriptionKey: "No club code found"])
+            }
+            throw error
+        }
     }
 
     func joinSchoolClub(name: String, code: String) async throws {
