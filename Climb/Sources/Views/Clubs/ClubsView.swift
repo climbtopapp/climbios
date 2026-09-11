@@ -169,22 +169,55 @@ struct ClubsView: View {
                     Text("Join a Club")
                         .font(ClimbTheme.displayFont(size: 24))
 
-                    TextField("Invite Code", text: $joinCode)
-                        .font(ClimbTheme.bodyFont(size: 20))
-                        .foregroundColor(ClimbTheme.textMain)
-                        .tracking(2)
-                        .textCase(.uppercase)
-                        .multilineTextAlignment(.center)
-                        .padding(12)
-                        .background(ClimbTheme.bgPrimary)
-                        .overlay(
-                            Rectangle()
-                                .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
-                        )
-                        .textInputAutocapitalization(.characters)
-                        .onChange(of: joinCode) { _, newVal in
-                            if newVal.count > 6 { joinCode = String(newVal.prefix(6)) }
+                    HStack(spacing: 8) {
+                        TextField("Invite Code", text: $joinCode)
+                            .font(ClimbTheme.bodyFont(size: 20))
+                            .foregroundColor(ClimbTheme.textMain)
+                            .tracking(2)
+                            .textCase(.uppercase)
+                            .multilineTextAlignment(.center)
+                            .padding(12)
+                            .background(ClimbTheme.bgPrimary)
+                            .overlay(
+                                Rectangle()
+                                    .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                            )
+                            .textInputAutocapitalization(.characters)
+                            .onChange(of: joinCode) { _, newVal in
+                                let clean = newVal.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+                                if clean.count > 6 {
+                                    joinCode = String(clean.prefix(6))
+                                } else if clean != newVal {
+                                    joinCode = clean
+                                }
+                            }
+
+                        Button(action: {
+                            if let paste = UIPasteboard.general.string {
+                                let clean = paste.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+                                joinCode = String(clean.prefix(6))
+                                let generator = UIImpactFeedbackGenerator(style: .light)
+                                generator.impactOccurred()
+                            }
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "doc.on.clipboard")
+                                    .font(.system(size: 13))
+                                Text("Paste")
+                                    .font(ClimbTheme.bodyFont(size: 13))
+                                    .fontWeight(.bold)
+                                    .textCase(.uppercase)
+                            }
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 14)
+                            .background(ClimbTheme.primaryColor)
+                            .overlay(
+                                Rectangle()
+                                    .stroke(ClimbTheme.borderColor, lineWidth: 2)
+                            )
                         }
+                    }
 
                     Button(action: { Task { await joinClub() } }) {
                         if isJoining {
@@ -194,7 +227,7 @@ struct ClubsView: View {
                         }
                     }
                     .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: true))
-                    .disabled(joinCode.count != 6 || isJoining)
+                    .disabled(joinCode.trimmingCharacters(in: .whitespacesAndNewlines).count != 6 || isJoining)
                 }
                 .brutalistCard(padding: 24)
 
@@ -282,21 +315,36 @@ struct ClubsView: View {
                 }
 
                 // Invite code
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Invite Code")
-                            .font(ClimbTheme.bodyFont(size: 12))
-                            .fontWeight(.bold)
-                            .foregroundColor(ClimbTheme.textMuted)
-                            .textCase(.uppercase)
+                HStack(spacing: 8) {
+                    Button(action: {
+                        copyClubCode()
+                    }) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 4) {
+                                Text("Invite Code")
+                                    .font(ClimbTheme.bodyFont(size: 12))
+                                    .fontWeight(.bold)
+                                    .foregroundColor(ClimbTheme.textMuted)
+                                    .textCase(.uppercase)
+                                Image(systemName: "doc.on.doc")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(ClimbTheme.textMuted)
+                            }
 
-                        Text(appState.currentClubInfo?.code ?? "------")
-                            .font(.system(size: 22, weight: .heavy, design: .monospaced))
-                            .tracking(3)
-                            .foregroundColor(ClimbTheme.primaryColor)
+                            Text(appState.currentClubInfo?.code ?? "------")
+                                .font(.system(size: 22, weight: .heavy, design: .monospaced))
+                                .tracking(3)
+                                .foregroundColor(ClimbTheme.primaryColor)
+                        }
                     }
+                    .buttonStyle(.plain)
 
                     Spacer()
+
+                    Button("Copy") {
+                        copyClubCode()
+                    }
+                    .buttonStyle(BrutalistSmallButtonStyle())
 
                     Button("Share") {
                         shareClubCode()
@@ -519,6 +567,14 @@ struct ClubsView: View {
         } catch {
             appState.showToastMessage(error.localizedDescription, type: .error)
         }
+    }
+
+    private func copyClubCode() {
+        guard let code = appState.currentClubInfo?.code, !code.isEmpty else { return }
+        UIPasteboard.general.string = code
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+        appState.showToastMessage("Club code copied to clipboard!", type: .success)
     }
 
     private func shareClubCode() {
@@ -785,6 +841,11 @@ struct JoinSchoolSheet: View {
                         .overlay(
                             Rectangle().stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
                         )
+                        .onChange(of: emailInput) { _, newVal in
+                            if newVal.hasPrefix(" ") || newVal.hasSuffix(" ") {
+                                emailInput = newVal.trimmingCharacters(in: .whitespacesAndNewlines)
+                            }
+                        }
 
                     if let err = errorMessage {
                         HStack(spacing: 6) {
@@ -805,6 +866,7 @@ struct JoinSchoolSheet: View {
                 )
 
                 Button(action: {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                     verifyAndJoin(school: school)
                 }) {
                     HStack {
@@ -816,7 +878,7 @@ struct JoinSchoolSheet: View {
                     }
                 }
                 .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: true))
-                .disabled(emailInput.trimmingCharacters(in: .whitespaces).isEmpty || isSubmitting)
+                .disabled(emailInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSubmitting)
             }
             .padding(20)
         }

@@ -144,9 +144,7 @@ struct LeaderboardView: View {
                     handle: igViewHandle,
                     onOpen: {
                         showIgViewModal = false
-                        if let url = URL(string: "https://instagram.com/\(igViewHandle)") {
-                            Task { @MainActor in await UIApplication.shared.open(url) }
-                        }
+                        AppState.openInstagram(handle: igViewHandle)
                     },
                     onDismiss: { showIgViewModal = false }
                 )

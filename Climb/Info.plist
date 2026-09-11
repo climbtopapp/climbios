@@ -35,6 +35,10 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>instagram</string>
+	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Climb needs camera access to take a profile photo.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

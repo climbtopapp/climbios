@@ -1464,4 +1464,16 @@ final class AppState: ObservableObject {
         try await supabase.rpc("remove_club_member", params: ["target_user_id": userId.uuidString]).execute()
         await fetchClubInfo()
     }
+
+    static func openInstagram(handle: String) {
+        let clean = handle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !clean.isEmpty else { return }
+
+        if let appUrl = URL(string: "instagram://user?username=\(clean)"),
+           UIApplication.shared.canOpenURL(appUrl) {
+            UIApplication.shared.open(appUrl)
+        } else if let webUrl = URL(string: "https://instagram.com/\(clean)") {
+            UIApplication.shared.open(webUrl)
+        }
+    }
 }

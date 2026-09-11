@@ -784,10 +784,6 @@ struct StarredClimbersSheet: View {
     }
 
     private func openInstagram(_ handle: String) {
-        if let url = URL(string: "https://instagram.com/\(handle)") {
-            Task { @MainActor in
-                await UIApplication.shared.open(url)
-            }
-        }
+        AppState.openInstagram(handle: handle)
     }
 }
