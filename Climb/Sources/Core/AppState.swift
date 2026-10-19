@@ -503,10 +503,10 @@ final class AppState: ObservableObject {
                 self.isLoading = false
             }
 
-            // Fetch club info
-            await fetchClubInfo()
-            // Fetch notifications
-            await fetchNotifications()
+            // Fetch club info & notifications concurrently for fast startup
+            async let clubTask: () = fetchClubInfo()
+            async let notifTask: () = fetchNotifications()
+            _ = await (clubTask, notifTask)
         } catch {
             print("Profile not found or error loading profile: \(error)")
             await MainActor.run {
@@ -919,7 +919,7 @@ final class AppState: ObservableObject {
     func unlockFeature(id: String, cost: Int) async -> Bool {
         guard var profile = currentProfile, let userId = currentUser?.id else { return false }
         guard profile.availableSteps >= cost else {
-            showToastMessage("Not enough Steps! You need \(cost) Steps to unlock this (you have \(profile.availableSteps)). Cast more votes or purchase Steps to unlock!", type: .error)
+            showToastMessage("Need \(cost) Steps (you have \(profile.availableSteps) Steps).", type: .error)
             return false
         }
 
@@ -944,7 +944,7 @@ final class AppState: ObservableObject {
                     .execute()
             } catch {
                 print("Failed to save feature unlock: \(error)")
-                showToastMessage("Failed to unlock feature.", type: .error)
+                showToastMessage("Failed to activate feature.", type: .error)
                 return false
             }
         }
@@ -957,7 +957,7 @@ final class AppState: ObservableObject {
     func unlockInstagram(targetUserId: UUID, cost: Int = 25) async -> Bool {
         guard var profile = currentProfile, let userId = currentUser?.id else { return false }
         guard profile.availableSteps >= cost else {
-            showToastMessage("Not enough Steps! You need \(cost) Steps to view Instagram (you have \(profile.availableSteps)). Cast more votes or purchase Steps to unlock!", type: .error)
+            showToastMessage("Need \(cost) Steps to reveal Instagram (you have \(profile.availableSteps) Steps).", type: .error)
             return false
         }
 
@@ -1121,9 +1121,9 @@ final class AppState: ObservableObject {
 
         self.currentProfile = profile
         if awardedBonus {
-            showToastMessage("Instagram handle saved! +50 FREE Steps added! 🎉", type: .success)
+            showToastMessage("Instagram handle saved! +50 Steps added.", type: .success)
         } else {
-            showToastMessage("Instagram handle saved!", type: .success)
+            showToastMessage("Instagram handle saved.", type: .success)
         }
         return true
     }

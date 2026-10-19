@@ -87,7 +87,7 @@ struct ClubsView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "lock.fill")
                         .font(.system(size: 14))
-                    Text("UNLOCK CLUBS (10 STEPS)")
+                    Text("JOIN CLUBS (10 STEPS)")
                 }
             }
             .buttonStyle(BrutalistPrimaryButtonStyle(isFullWidth: false))
@@ -98,10 +98,11 @@ struct ClubsView: View {
         .overlay {
             if showUnlockModal {
                 BrutalistUnlockModal(
-                    title: "UNLOCK CLUBS",
-                    message: "Unlock Clubs for 10 Steps?",
+                    title: "JOIN CLUBS",
+                    message: "Access club climbing for 10 Steps.",
                     cost: 10,
                     availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    confirmTitle: "Join Clubs (10 Steps)",
                     onUnlock: {
                         showUnlockModal = false
                         Task {

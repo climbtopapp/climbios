@@ -284,10 +284,11 @@ struct MashView: View {
             if showIgUnlockModal, let target = igUnlockTarget, let rawHandle = target.instagramHandle {
                 let clean = rawHandle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
                 BrutalistUnlockModal(
-                    title: "UNLOCK INSTAGRAM",
-                    message: "Unlock this user's Instagram profile for 25 Steps?",
+                    title: "REVEAL INSTAGRAM",
+                    message: "Spend 25 Steps to reveal this climber's Instagram handle.",
                     cost: 25,
                     availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    confirmTitle: "Reveal Handle (25 Steps)",
                     onUnlock: {
                         showIgUnlockModal = false
                         Task {
@@ -332,10 +333,11 @@ struct MashView: View {
         .overlay {
             if showClubsUnlockConfirm {
                 BrutalistUnlockModal(
-                    title: "UNLOCK CLUBS",
-                    message: "Unlock Clubs for 10 Steps?",
+                    title: "JOIN CLUBS",
+                    message: "Access club climbing for 10 Steps.",
                     cost: 10,
                     availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    confirmTitle: "Join Clubs (10 Steps)",
                     onUnlock: {
                         showClubsUnlockConfirm = false
                         Task {
@@ -554,11 +556,13 @@ struct MashView: View {
         let loserId = side == "left" ? appState.currentMatchup[1].id : appState.currentMatchup[0].id
 
         Task {
-            await appState.castVote(winnerId: winnerId, loserId: loserId)
+            // Concurrent vote submission and next matchup load for snappy, instantaneous UX
+            async let voteTask: () = appState.castVote(winnerId: winnerId, loserId: loserId)
 
-            try? await Task.sleep(for: .milliseconds(200))
-
+            try? await Task.sleep(for: .milliseconds(120))
             await appState.loadNextMatchup()
+            _ = await voteTask
+
             randomizeRotations()
             votedSide = nil
             isVoting = false
@@ -619,11 +623,11 @@ struct StepsExplainerSheet: View {
                     .font(.system(size: 40))
                     .foregroundColor(ClimbTheme.primaryColor)
 
-                Text("STEPS")
+                Text("HOW STEPS WORK")
                     .font(ClimbTheme.displayFont(size: 24))
                     .foregroundColor(ClimbTheme.primaryColor)
 
-                Text("You can spend your steps to gain access to new features and stars to use on other users.")
+                Text("Earn 1 Step per vote. Spend Steps to access Summit rankings, join clubs, reveal your 0–100 personal grade, and view Instagram handles.")
                     .font(ClimbTheme.bodyFont(size: 14))
                     .multilineTextAlignment(.center)
                     .foregroundColor(ClimbTheme.textMain)
@@ -640,7 +644,7 @@ struct StepsExplainerSheet: View {
                             Image(systemName: "star.fill")
                                 .font(.system(size: 14))
                                 .foregroundColor(ClimbTheme.primaryColor)
-                            Text("View User Instagram")
+                            Text("View Instagram")
                                 .font(ClimbTheme.bodyFont(size: 13))
                                 .fontWeight(.bold)
                         }
@@ -721,16 +725,25 @@ struct StepsExplainerSheet: View {
                 HStack(spacing: 4) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
-                    Text("Unlocked")
+                    Text("Active")
                         .font(ClimbTheme.bodyFont(size: 12))
                         .fontWeight(.bold)
                         .foregroundColor(.green)
                 }
             } else {
+                let actionText: String = {
+                    switch id {
+                    case "leaderboard": return "Enter (\(cost))"
+                    case "clubs": return "Join (\(cost))"
+                    case "grade": return "Reveal (\(cost))"
+                    case "ranks": return "View (\(cost))"
+                    default: return "Get (\(cost))"
+                    }
+                }()
                 Button(action: {
                     Task { _ = await appState.unlockFeature(id: id, cost: cost) }
                 }) {
-                    Text("Unlock (\(cost))")
+                    Text(actionText)
                         .font(ClimbTheme.bodyFont(size: 12))
                         .fontWeight(.bold)
                 }

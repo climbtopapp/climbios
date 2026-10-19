@@ -45,7 +45,7 @@ struct MainTabView: View {
                     onTapLocked: {
                         let avail = appState.currentProfile?.availableSteps ?? 0
                         if avail < 25 {
-                            appState.showToastMessage("Not enough Steps! You need 25 Steps to unlock Summit (you have \(avail) Steps). Cast more votes or purchase Steps to unlock!", type: .error)
+                            appState.showToastMessage("Need 25 Steps to access Summit (you have \(avail) Steps).", type: .error)
                         } else {
                             showSummitUnlockConfirm = true
                         }
@@ -59,7 +59,7 @@ struct MainTabView: View {
                     onTapLocked: {
                         let avail = appState.currentProfile?.availableSteps ?? 0
                         if avail < 10 {
-                            appState.showToastMessage("Not enough Steps! You need 10 Steps to unlock Clubs (you have \(avail) Steps). Cast more votes or purchase Steps to unlock!", type: .error)
+                            appState.showToastMessage("Need 10 Steps to access Clubs (you have \(avail) Steps).", type: .error)
                         } else {
                             showClubsUnlockConfirm = true
                         }
@@ -80,10 +80,11 @@ struct MainTabView: View {
         .overlay {
             if showSummitUnlockConfirm {
                 BrutalistUnlockModal(
-                    title: "UNLOCK SUMMIT",
-                    message: "Unlock the Summit (Leaderboard) for 25 Steps?",
+                    title: "ENTER SUMMIT",
+                    message: "Access the Summit leaderboard for 25 Steps.",
                     cost: 25,
                     availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    confirmTitle: "Enter Summit (25 Steps)",
                     onUnlock: {
                         showSummitUnlockConfirm = false
                         Task {
@@ -98,10 +99,11 @@ struct MainTabView: View {
         .overlay {
             if showClubsUnlockConfirm {
                 BrutalistUnlockModal(
-                    title: "UNLOCK CLUBS",
-                    message: "Unlock Clubs for 10 Steps?",
+                    title: "JOIN CLUBS",
+                    message: "Access club climbing for 10 Steps.",
                     cost: 10,
                     availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    confirmTitle: "Join Clubs (10 Steps)",
                     onUnlock: {
                         showClubsUnlockConfirm = false
                         Task {

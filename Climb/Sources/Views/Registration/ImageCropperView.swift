@@ -68,8 +68,9 @@ struct ImageCropperView: View {
 
                 // Zoom slider
                 HStack(spacing: 10) {
-                    Text("➖")
-                        .font(.system(size: 14))
+                    Image(systemName: "minus")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(ClimbTheme.textMuted)
 
                     Slider(value: $scale, in: 1...3, step: 0.01)
                         .tint(ClimbTheme.primaryColor)
@@ -77,8 +78,9 @@ struct ImageCropperView: View {
                             lastScale = newVal
                         }
 
-                    Text("➕")
-                        .font(.system(size: 14))
+                    Image(systemName: "plus")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(ClimbTheme.textMuted)
                 }
                 .padding(.horizontal)
 

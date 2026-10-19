@@ -38,10 +38,11 @@ struct ProfileView: View {
         .overlay {
             if showGradeConfirm {
                 BrutalistUnlockModal(
-                    title: "UNLOCK PERSONAL GRADE",
-                    message: "Unlock your official Personal Grade for 75 Steps?",
+                    title: "REVEAL PERSONAL GRADE",
+                    message: "Reveal your rating on a 0–100 scale for 75 Steps.",
                     cost: 75,
                     availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    confirmTitle: "Reveal Grade (75 Steps)",
                     onUnlock: {
                         showGradeConfirm = false
                         Task { _ = await appState.unlockFeature(id: "grade", cost: 75) }
@@ -53,10 +54,11 @@ struct ProfileView: View {
         .overlay {
             if showRanksConfirm {
                 BrutalistUnlockModal(
-                    title: "UNLOCK LEADERBOARD RANKS",
-                    message: "Unlock your official Global, Regional, and Club ranks for 250 Steps?",
+                    title: "REVEAL RANKS",
+                    message: "Reveal your exact Global, Regional, and Club ranks for 250 Steps.",
                     cost: 250,
                     availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    confirmTitle: "Reveal Ranks (250 Steps)",
                     onUnlock: {
                         showRanksConfirm = false
                         Task { _ = await appState.unlockFeature(id: "ranks", cost: 250) }
@@ -126,7 +128,7 @@ struct ProfileView: View {
                 Button(action: {
                     if !isGradeUnlocked {
                         if avail < 75 {
-                            appState.showToastMessage("Not enough Steps! You need 75 Steps to unlock Personal Grade (you have \(avail) Steps). Cast more votes or purchase Steps to unlock!", type: .error)
+                            appState.showToastMessage("Need 75 Steps to reveal Personal Grade (you have \(avail) Steps).", type: .error)
                         } else {
                             showGradeConfirm = true
                         }
@@ -177,7 +179,7 @@ struct ProfileView: View {
                     if !isRanksUnlocked {
                         let avail = appState.currentProfile?.availableSteps ?? 0
                         if avail < 250 {
-                            appState.showToastMessage("Not enough Steps! You need 250 Steps to unlock Official Ranks (you have \(avail) Steps). Cast more votes or purchase Steps to unlock!", type: .error)
+                            appState.showToastMessage("Need 250 Steps to reveal Official Ranks (you have \(avail) Steps).", type: .error)
                         } else {
                             showRanksConfirm = true
                         }
@@ -256,7 +258,7 @@ struct ProfileView: View {
 
             let claimed = appState.currentProfile?.claimedIgBonus ?? false
             if !claimed {
-                Text("Save your Instagram handle to claim +50 FREE Steps!")
+                Text("+50 STEPS • Save your Instagram handle to claim bonus Steps.")
                     .font(ClimbTheme.bodyFont(size: 12))
                     .fontWeight(.bold)
                     .foregroundColor(ClimbTheme.primaryColor)
@@ -533,12 +535,12 @@ struct PersonalGradePurchaseSheet: View {
 
             // Header
             VStack(spacing: 8) {
-                Text("UNLOCK PERSONAL GRADE")
+                Text("REVEAL PERSONAL GRADE")
                     .font(ClimbTheme.displayFont(size: 24))
                     .foregroundColor(ClimbTheme.primaryColor)
                     .multilineTextAlignment(.center)
 
-                Text("Find out your official letter grade based on head-to-head match votes across Climb!")
+                Text("Find out your official grade on a 0–100 scale based on head-to-head match votes across Climb!")
                     .font(ClimbTheme.bodyFont(size: 14))
                     .foregroundColor(ClimbTheme.textMuted)
                     .multilineTextAlignment(.center)
@@ -601,7 +603,7 @@ struct PersonalGradePurchaseSheet: View {
                             ProgressView()
                                 .tint(.black)
                         } else {
-                            Text("Unlock for $0.99")
+                            Text("Reveal Grade ($0.99)")
                         }
                     }
                 }
@@ -667,12 +669,13 @@ struct StarredClimbersSheet: View {
                 } else if starredUsers.isEmpty {
                     Spacer()
                     VStack(spacing: 12) {
-                        Text("⭐")
-                            .font(.system(size: 44))
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 36))
+                            .foregroundColor(ClimbTheme.primaryColor)
                         Text("No Starred Climbers Yet")
                             .font(ClimbTheme.displayFont(size: 20))
                             .foregroundColor(ClimbTheme.textMain)
-                        Text("Star users on the Summit or in Matchups to unlock and view their Instagram profiles here anytime!")
+                        Text("Star climbers on the Summit or in Matchups to reveal and view their Instagram handles here anytime.")
                             .font(ClimbTheme.bodyFont(size: 13))
                             .foregroundColor(ClimbTheme.textMuted)
                             .multilineTextAlignment(.center)

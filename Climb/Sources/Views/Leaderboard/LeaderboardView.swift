@@ -114,14 +114,15 @@ struct LeaderboardView: View {
             if showIgUnlockModal, let target = targetIgUser, let rawHandle = target.instagramHandle {
                 let clean = rawHandle.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
                 BrutalistUnlockModal(
-                    title: "UNLOCK INSTAGRAM",
-                    message: "Unlock this user's Instagram profile for 25 Steps?",
+                    title: "REVEAL INSTAGRAM",
+                    message: "Spend 25 Steps to reveal this climber's Instagram handle.",
                     cost: 25,
                     availableSteps: appState.currentProfile?.availableSteps ?? 0,
+                    confirmTitle: "Reveal Handle (25 Steps)",
                     onUnlock: {
                         let avail = appState.currentProfile?.availableSteps ?? 0
                         guard avail >= 25 else {
-                            appState.showToastMessage("Need 25 Steps to unlock. (You have \(avail) Steps)", type: .error)
+                            appState.showToastMessage("Need 25 Steps to reveal handle. (You have \(avail) Steps)", type: .error)
                             return
                         }
                         showIgUnlockModal = false

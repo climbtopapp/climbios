@@ -329,6 +329,7 @@ struct BrutalistUnlockModal: View {
     let message: String
     let cost: Int
     let availableSteps: Int
+    var confirmTitle: String? = nil
     let onUnlock: () -> Void
     let onCancel: () -> Void
 
@@ -360,7 +361,7 @@ struct BrutalistUnlockModal: View {
                         .foregroundColor(availableSteps < cost ? ClimbTheme.errorColor : ClimbTheme.textMuted)
 
                     if availableSteps < cost {
-                        Text("Need \(cost - availableSteps) more Steps to unlock")
+                        Text("Need \(cost - availableSteps) more Steps")
                             .font(ClimbTheme.bodyFont(size: 11))
                             .foregroundColor(ClimbTheme.errorColor)
                     }
@@ -376,7 +377,7 @@ struct BrutalistUnlockModal: View {
                     .buttonStyle(BrutalistSmallButtonStyle())
 
                     Button(action: onUnlock) {
-                        Text(availableSteps < cost ? "Need \(cost) Steps" : "Unlock (\(cost) Steps)")
+                        Text(availableSteps < cost ? "Need \(cost) Steps" : (confirmTitle ?? "Unlock (\(cost) Steps)"))
                             .font(ClimbTheme.bodyFont(size: 14))
                             .fontWeight(.bold)
                             .frame(maxWidth: .infinity)
@@ -462,7 +463,7 @@ struct BrutalistIgViewModal: View {
                     .font(.system(size: 36))
                     .foregroundColor(ClimbTheme.primaryColor)
 
-                Text("INSTAGRAM UNLOCKED")
+                Text("HANDLE REVEALED")
                     .font(ClimbTheme.displayFont(size: 20))
                     .foregroundColor(ClimbTheme.primaryColor)
                     .multilineTextAlignment(.center)
