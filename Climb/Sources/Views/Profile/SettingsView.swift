@@ -30,6 +30,7 @@ struct SettingsView: View {
                     saveButton
                     restorePurchasesButton
                     contactSupportButton
+                    legalLinksSection
                     signOutButton
                     deleteAccountSection
                 }
@@ -250,6 +251,42 @@ struct SettingsView: View {
                 )
         }
         .buttonStyle(.plain)
+    }
+
+    private var legalLinksSection: some View {
+        HStack(spacing: 12) {
+            Link(destination: URL(string: "https://climb.side-eye.xyz/privacy.html")!) {
+                Text("Privacy Policy")
+                    .font(ClimbTheme.bodyFont(size: 14))
+                    .fontWeight(.bold)
+                    .textCase(.uppercase)
+                    .foregroundColor(ClimbTheme.textMain)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(ClimbTheme.bgSecondary)
+                    .overlay(
+                        Rectangle()
+                            .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                    )
+            }
+            .buttonStyle(.plain)
+
+            Link(destination: URL(string: "https://climb.side-eye.xyz/terms.html")!) {
+                Text("Terms of Use")
+                    .font(ClimbTheme.bodyFont(size: 14))
+                    .fontWeight(.bold)
+                    .textCase(.uppercase)
+                    .foregroundColor(ClimbTheme.textMain)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(ClimbTheme.bgSecondary)
+                    .overlay(
+                        Rectangle()
+                            .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+                    )
+            }
+            .buttonStyle(.plain)
+        }
     }
 
     private var signOutButton: some View {

@@ -123,15 +123,29 @@ struct AuthView: View {
             .buttonStyle(BrutalistTextButtonStyle())
             .padding(.top, 15)
 
-            VStack(spacing: 2) {
-                Text("By signing up, you agree to the standard Apple")
+            VStack(spacing: 4) {
+                Text("By continuing, you agree to our")
                     .font(ClimbTheme.bodyFont(size: 10))
                     .foregroundColor(ClimbTheme.textMuted)
-                Link("Terms of Use (EULA)", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
-                    .font(ClimbTheme.bodyFont(size: 10))
-                    .fontWeight(.bold)
-                    .foregroundColor(ClimbTheme.accentColor)
-                    .underline()
+                HStack(spacing: 4) {
+                    Link("Terms of Use (EULA)", destination: URL(string: "https://climb.side-eye.xyz/terms.html")!)
+                        .font(ClimbTheme.bodyFont(size: 10))
+                        .fontWeight(.bold)
+                        .foregroundColor(ClimbTheme.accentColor)
+                        .underline()
+                    Text("and")
+                        .font(ClimbTheme.bodyFont(size: 10))
+                        .foregroundColor(ClimbTheme.textMuted)
+                    Link("Privacy Policy", destination: URL(string: "https://climb.side-eye.xyz/privacy.html")!)
+                        .font(ClimbTheme.bodyFont(size: 10))
+                        .fontWeight(.bold)
+                        .foregroundColor(ClimbTheme.accentColor)
+                        .underline()
+                }
+                Text("Zero tolerance for objectionable content or abusive behavior.")
+                    .font(ClimbTheme.bodyFont(size: 9))
+                    .foregroundColor(ClimbTheme.textMuted)
+                    .multilineTextAlignment(.center)
             }
             .padding(.top, 10)
         }
