@@ -604,12 +604,6 @@ struct SchoolOptionItem: Identifiable {
 
 private let availableSchoolsList: [SchoolOptionItem] = [
     SchoolOptionItem(
-        id: "uatx",
-        name: "University of Austin (UATX)",
-        code: "UATX",
-        emailDomain: "@student.uaustin.org"
-    ),
-    SchoolOptionItem(
         id: "utaustin",
         name: "UT Austin",
         code: "UTAUSTIN",

@@ -3,18 +3,56 @@ import SwiftUI
 /// Design tokens matching the web app's CSS variables
 /// Neo-brutalist style: no border radius, black borders, pastel blue accents
 struct ClimbTheme {
-    // Colors
-    static let bgPrimary = Color(red: 0.922, green: 0.945, blue: 0.980) // #ebf1fa
-    static let bgSecondary = Color.white // #ffffff
-    static let primaryColor = Color(red: 0.733, green: 0.871, blue: 0.984) // #bbdefb
-    static let primaryHover = Color(red: 0.565, green: 0.792, blue: 0.976) // #90caf9
-    static let primaryLight = Color(red: 0.890, green: 0.949, blue: 0.992) // #e3f2fd
-    static let textMain = Color.black // #000000
-    static let textMuted = Color(red: 0.333, green: 0.333, blue: 0.400) // #555566
-    static let borderColor = Color.black // #000000
-    static let accentColor = Color(red: 0.259, green: 0.647, blue: 0.961) // #42a5f5
+    // Dynamic color helper for Light & Dark mode support
+    private static func dynamicColor(light: UIColor, dark: UIColor) -> Color {
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark ? dark : light
+        })
+    }
+
+    // Colors supporting dynamic Light & Dark mode
+    static let bgPrimary = dynamicColor(
+        light: UIColor(red: 0.922, green: 0.945, blue: 0.980, alpha: 1.0), // #ebf1fa
+        dark: UIColor(red: 0.055, green: 0.071, blue: 0.090, alpha: 1.0)  // #0e1217
+    )
+    static let bgSecondary = dynamicColor(
+        light: UIColor.white,
+        dark: UIColor(red: 0.086, green: 0.106, blue: 0.133, alpha: 1.0)  // #161b22
+    )
+    static let primaryColor = dynamicColor(
+        light: UIColor(red: 0.733, green: 0.871, blue: 0.984, alpha: 1.0), // #bbdefb
+        dark: UIColor(red: 0.231, green: 0.510, blue: 0.965, alpha: 1.0)   // #3b82f6
+    )
+    static let primaryHover = dynamicColor(
+        light: UIColor(red: 0.565, green: 0.792, blue: 0.976, alpha: 1.0), // #90caf9
+        dark: UIColor(red: 0.145, green: 0.388, blue: 0.922, alpha: 1.0)   // #2563eb
+    )
+    static let primaryLight = dynamicColor(
+        light: UIColor(red: 0.890, green: 0.949, blue: 0.992, alpha: 1.0), // #e3f2fd
+        dark: UIColor(red: 0.118, green: 0.161, blue: 0.231, alpha: 1.0)   // #1e293b
+    )
+    static let textMain = dynamicColor(
+        light: UIColor.black,
+        dark: UIColor(red: 0.941, green: 0.965, blue: 0.988, alpha: 1.0)   // #f0f6fc
+    )
+    static let textMuted = dynamicColor(
+        light: UIColor(red: 0.333, green: 0.333, blue: 0.400, alpha: 1.0), // #555566
+        dark: UIColor(red: 0.545, green: 0.580, blue: 0.620, alpha: 1.0)   // #8b949e
+    )
+    static let borderColor = dynamicColor(
+        light: UIColor.black,
+        dark: UIColor(red: 0.216, green: 0.255, blue: 0.318, alpha: 1.0)   // #374151
+    )
+    static let accentColor = dynamicColor(
+        light: UIColor(red: 0.259, green: 0.647, blue: 0.961, alpha: 1.0), // #42a5f5
+        dark: UIColor(red: 0.376, green: 0.647, blue: 0.980, alpha: 1.0)   // #60a5fa
+    )
+    static let primaryButtonText = dynamicColor(
+        light: UIColor.black,
+        dark: UIColor.white
+    )
     static let successColor = Color(red: 0, green: 0.784, blue: 0.325) // #00c853
-    static let errorColor = Color(red: 1, green: 0.231, blue: 0.188) // #ff3b30
+    static let errorColor = Color(red: 1, green: 0.231, blue: 0.188)   // #ff3b30
 
     // Border width
     static let borderWidth: CGFloat = 3
@@ -83,7 +121,7 @@ struct BrutalistPrimaryButtonStyle: ButtonStyle {
             .padding(.vertical, 12)
             .frame(maxWidth: isFullWidth ? .infinity : nil)
             .background(ClimbTheme.primaryColor)
-            .foregroundColor(.black)
+            .foregroundColor(ClimbTheme.primaryButtonText)
             .overlay(
                 Rectangle()
                     .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)

@@ -5,6 +5,7 @@ import PhotosUI
 /// Matches the web's settings-modal
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
+    @ObservedObject private var themeManager = ThemeManager.shared
     @Environment(\.dismiss) var dismiss
 
     @State private var firstName = ""
@@ -27,6 +28,7 @@ struct SettingsView: View {
                     genderSection
                     votePrefSection
                     CityPickerView(selectedCity: $selectedCity)
+                    appearanceSection
                     saveButton
                     restorePurchasesButton
                     contactSupportButton
@@ -190,6 +192,68 @@ struct SettingsView: View {
                     .buttonStyle(.plain)
                 }
             }
+        }
+    }
+
+    private var appearanceSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Appearance")
+                .font(ClimbTheme.bodyFont(size: 14))
+                .fontWeight(.bold)
+                .foregroundColor(ClimbTheme.primaryColor)
+                .textCase(.uppercase)
+                .tracking(1)
+
+            VStack(spacing: 12) {
+                // Auto switch that reacts to system settings
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Auto (Match System)")
+                            .font(ClimbTheme.bodyFont(size: 15))
+                            .fontWeight(.bold)
+                            .foregroundColor(ClimbTheme.textMain)
+                        Text("Follow iOS system Light / Dark mode")
+                            .font(ClimbTheme.bodyFont(size: 12))
+                            .foregroundColor(ClimbTheme.textMuted)
+                    }
+
+                    Spacer()
+
+                    Toggle("", isOn: $themeManager.autoMatchSystem)
+                        .labelsHidden()
+                        .tint(ClimbTheme.accentColor)
+                }
+
+                Divider()
+                    .background(ClimbTheme.borderColor.opacity(0.3))
+
+                // Manual Dark Mode toggle
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Dark Mode")
+                            .font(ClimbTheme.bodyFont(size: 15))
+                            .fontWeight(.bold)
+                            .foregroundColor(themeManager.autoMatchSystem ? ClimbTheme.textMuted : ClimbTheme.textMain)
+                        Text(themeManager.autoMatchSystem ? "Auto switch enabled" : (themeManager.isDarkMode ? "Dark mode on" : "Dark mode off"))
+                            .font(ClimbTheme.bodyFont(size: 12))
+                            .foregroundColor(ClimbTheme.textMuted)
+                    }
+
+                    Spacer()
+
+                    Toggle("", isOn: $themeManager.isDarkMode)
+                        .labelsHidden()
+                        .tint(ClimbTheme.accentColor)
+                        .disabled(themeManager.autoMatchSystem)
+                        .opacity(themeManager.autoMatchSystem ? 0.35 : 1.0)
+                }
+            }
+            .padding(14)
+            .background(ClimbTheme.bgSecondary)
+            .overlay(
+                Rectangle()
+                    .stroke(ClimbTheme.borderColor, lineWidth: ClimbTheme.borderWidth)
+            )
         }
     }
 

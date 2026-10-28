@@ -4,12 +4,14 @@ import Supabase
 @main
 struct ClimbApp: App {
     @StateObject private var appState = AppState()
+    @StateObject private var themeManager = ThemeManager.shared
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(appState)
-                .preferredColorScheme(.light)
+                .environmentObject(themeManager)
+                .preferredColorScheme(themeManager.preferredColorScheme)
                 .onOpenURL { url in
                     // Handle deep link for magic link auth callback
                     Task {

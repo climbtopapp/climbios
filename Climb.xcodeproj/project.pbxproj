@@ -23,6 +23,7 @@
 		571A0CB59DFE066942469B58 /* Cities.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6C3A9FCEBCFD0BA0DA137BC /* Cities.swift */; };
 		5885731F5F7BE07D28BD6365 /* StoreKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6471FAA4E75B1376BDD58693 /* StoreKitManager.swift */; };
 		5A44BC44576AF4B83E7A0768 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0C875AF573F67457B2AB78 /* RegisterView.swift */; };
+		5CE1E06A665CC2C792AAF2B4 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC7714AB47750FEA9B874A4F /* ThemeManager.swift */; };
 		5EF865823BCE7DFEF228F210 /* SafetyInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33A0B8A4D88651FB04F3209D /* SafetyInfoView.swift */; };
 		62E9E3F92A968F800622C986 /* ClubsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2876BCE47A48B9CF49889216 /* ClubsView.swift */; };
 		74E3DABA4AE96924DC942611 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6313E2F5AFD89086C5C6D4 /* ProfileView.swift */; };
@@ -69,6 +70,7 @@
 		EC444458CE4FD78EE97C4EB9 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		EF7DEE57A9235D715ACEC8DC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F58DD979CD1DA9B37A8401D5 /* Climb.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Climb.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FC7714AB47750FEA9B874A4F /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		FCDD58EA8F811CBF4C58E282 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -236,6 +238,7 @@
 			isa = PBXGroup;
 			children = (
 				D1051716D7447168B0586B49 /* Theme.swift */,
+				FC7714AB47750FEA9B874A4F /* ThemeManager.swift */,
 			);
 			path = Theme;
 			sourceTree = "<group>";
@@ -360,6 +363,7 @@
 				5885731F5F7BE07D28BD6365 /* StoreKitManager.swift in Sources */,
 				3FABE01C11377D0040E06BE0 /* SupabaseManager.swift in Sources */,
 				FA97FA5FA06FB2C411484CB9 /* Theme.swift in Sources */,
+				5CE1E06A665CC2C792AAF2B4 /* ThemeManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
